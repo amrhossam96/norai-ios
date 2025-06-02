@@ -7,6 +7,15 @@
 
 import Foundation
 
-public protocol NoraiMiddlewareProtocol {
+public enum MiddlewareType {
+    case PRE
+    case POST
+}
+
+public protocol NoraiMiddleware {
+    func processRequest(_ request: URLRequest) async throws -> URLRequest
+    func processResponse(_ response: URLResponse, for request: URLRequest) async throws -> URLResponse
     
+    var type: MiddlewareType { get }
+    var isErrorHandlingMandatory: Bool { get }
 }

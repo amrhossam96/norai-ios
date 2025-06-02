@@ -23,6 +23,8 @@ enum MockEndPoint: NoraiEndpoint {
     
     var path: String { "/" }
     
+    static let mockURLResquest = URLRequest(url: URL(string: "https://test.com")!)
+    
     static let invalidResponse = URLResponse(url: URL(string: "https://test.com")!,
                                              mimeType: nil,
                                              expectedContentLength: 0,

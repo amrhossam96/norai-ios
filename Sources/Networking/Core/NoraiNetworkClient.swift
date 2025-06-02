@@ -12,10 +12,13 @@ public protocol NoraiNetworkClientProtocol {
 }
 
 public class NoraiNetworkClient {
-    private let urlSession: URLSessionProtocol
+    private let urlSession: any URLSessionProtocol
+    private let middlewareExecutor: any MiddlewareExecutorProtocol
 
-    init(urlSession: URLSessionProtocol) {
+    init(urlSession: any URLSessionProtocol,
+         middlewareExecutor: any MiddlewareExecutorProtocol) {
         self.urlSession = urlSession
+        self.middlewareExecutor = middlewareExecutor
     }
 
     private func addComponents(to url: URL, from endpoint: any NoraiEndpoint) -> URL? {
@@ -38,14 +41,22 @@ extension NoraiNetworkClient: NoraiNetworkClientProtocol {
         urlRequest.httpBody = endpoint.body
         urlRequest.allHTTPHeaderFields = endpoint.headers
 
-        let (data, response): (Data, URLResponse)
-
+        var (data, response): (Data, URLResponse)
+        
+        do {
+            urlRequest = try await middlewareExecutor.executePreRequestMiddlewares(for: urlRequest)
+        } catch {
+            throw NoraiNetworkError.mandatoryMiddlewareFailure(underlyingError: error.localizedDescription)
+        }
         do {
             (data, response) = try await urlSession.data(for: urlRequest)
         } catch {
             throw NoraiNetworkError.networkFailure(underlyingError: error.localizedDescription)
         }
 
+        response = try await middlewareExecutor.executePostResponseMiddlewares(with: response, for: urlRequest)
+        
+        
         guard !data.isEmpty else {
             throw NoraiNetworkError.noData
         }

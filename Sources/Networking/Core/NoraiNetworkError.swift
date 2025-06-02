@@ -12,4 +12,5 @@ public enum NoraiNetworkError: Error, Equatable {
     case decodingError
     case networkFailure(underlyingError: String)
     case noData
+    case mandatoryMiddlewareFailure(underlyingError: String)
 }

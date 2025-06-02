@@ -19,41 +19,41 @@ struct TestEndpoint: NoraiEndpoint {
 
 struct NoraiEndpointTests {
     @Test func baseURLDefaultImplementation() {
-        let endpoint = TestEndpoint()
+        let endpoint: TestEndpoint = TestEndpoint()
         
-        let baseURL = endpoint.baseURL
+        let baseURL: URL? = endpoint.baseURL
         
         #expect(baseURL != nil)
         #expect(baseURL?.absoluteString == "http://127.0.0.1:3045")
     }
     
     @Test func pathForEndpoint() {
-        let endPoint = TestEndpoint()
-        let path = endPoint.path
+        let endPoint: TestEndpoint = TestEndpoint()
+        let path: String = endPoint.path
         #expect(path == "/test")
     }
     
     @Test func defaulMethodisGET() {
-        let endPoint = TestEndpoint()
-        let method = endPoint.method
+        let endPoint: TestEndpoint = TestEndpoint()
+        let method: HTTPMethod = endPoint.method
         #expect(method.rawValue == "GET")
     }
     
     @Test func defaultBodyIsNil() {
-        let endPoint = TestEndpoint()
-        let body = endPoint.body
+        let endPoint: TestEndpoint = TestEndpoint()
+        let body: Data? = endPoint.body
         #expect(body == nil)
     }
     
     @Test func defaultParametersIsNil() {
-        let endPoint = TestEndpoint()
-        let parameters = endPoint.parameters
+        let endPoint: TestEndpoint = TestEndpoint()
+        let parameters: [URLQueryItem]? = endPoint.parameters
         #expect(parameters == nil)
     }
     
     @Test func defaultHeadersIsNil() {
-        let endPoint = TestEndpoint()
-        let headers = endPoint.headers
+        let endPoint: TestEndpoint = TestEndpoint()
+        let headers: [String : String]? = endPoint.headers
         #expect(headers == nil)
     }
 }
