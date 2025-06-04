@@ -6,3 +6,21 @@
 //
 
 import Foundation
+
+class NoraiEventDispatcher {
+    private let apiClient: any NoraiNetworkClientProtocol
+
+    init(apiClient: any NoraiNetworkClientProtocol) {
+        self.apiClient = apiClient
+    }
+}
+
+extension NoraiEventDispatcher: NoraiEventDispatcherProtocol {
+    func enqueue(events: [NoraiEvent]) async {
+        do {
+            let _: TrackEventsResponse = try await apiClient.execute(NoraiAnalyticsEndPoint.track(events: events))
+        } catch {
+            
+        }
+    }
+}

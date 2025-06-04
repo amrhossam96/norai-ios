@@ -8,5 +8,5 @@
 import Foundation
 
 public protocol NoraiEventDispatcherProtocol {
-    func enqueue(event: NoraiEvent)
+    func enqueue(events: [NoraiEvent]) async
 }

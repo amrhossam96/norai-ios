@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct NoraiEvent: Decodable, Sendable {
+public struct NoraiEvent: Encodable, Sendable {
     private let id: UUID
     private let type: EventType
     private let timestamp: Date

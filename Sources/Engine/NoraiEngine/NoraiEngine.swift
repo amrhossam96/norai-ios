@@ -45,6 +45,6 @@ extension NoraiEngine: NoraiSchedulerDelegate {
     public func shouldFlush() async {
         let events: [NoraiEvent] = await buffer.drain()
         let processedEvents: [NoraiEvent] = processEvents(events)
-        processedEvents.forEach(dispatcher.enqueue)
+        await dispatcher.enqueue(events: processedEvents)
     }
 }
