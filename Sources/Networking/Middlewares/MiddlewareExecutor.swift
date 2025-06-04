@@ -22,9 +22,9 @@ public class MiddlewareExecutor {
 
 extension MiddlewareExecutor: MiddlewareExecutorProtocol {
     public func executePreRequestMiddlewares(for request: URLRequest) async throws -> URLRequest {
-        var urlRequest = request
+        var urlRequest: URLRequest = request
         do {
-            for middleware in self.middlewares where middleware.type == .PRE {
+            for middleware: any NoraiMiddleware in self.middlewares where middleware.type == .PRE {
                 urlRequest = try await middleware.processRequest(urlRequest)
             }
             return urlRequest
@@ -34,12 +34,13 @@ extension MiddlewareExecutor: MiddlewareExecutorProtocol {
     }
 
     public func executePostResponseMiddlewares(with response: URLResponse, for request: URLRequest) async throws -> URLResponse {
+        var updatedResponse: URLResponse = response
         do {
-            for middleware in self.middlewares where middleware.type == .POST &&
+            for middleware: any NoraiMiddleware in self.middlewares where middleware.type == .POST &&
             middleware.isErrorHandlingMandatory {
-                _ = try await middleware.processResponse(response, for: request)
+                updatedResponse = try await middleware.processResponse(response, for: request)
             }
-            return response
+            return updatedResponse
         } catch {
             throw NoraiNetworkError.mandatoryMiddlewareFailure(underlyingError: error.localizedDescription)
         }
