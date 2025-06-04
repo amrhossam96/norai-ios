@@ -1,11 +1,3 @@
-//
-//  README.md
-//  Norai
-//
-//  Created by Amr on 04/06/2025.
-//
-
-
 # Norai
 
 **Norai** is an intelligent analytics and recommendation engine that helps you truly understand your users — not just track them.
