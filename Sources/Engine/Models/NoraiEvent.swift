@@ -8,20 +8,20 @@
 import Foundation
 
 public struct NoraiEvent: Encodable, Sendable {
-    private let id: UUID
-    private let type: EventType
-    private let timestamp: Date
-    private let sessionId: UUID
-    private var userId: String?
-    private let metaData: [String: CodableValue]
+    var id: UUID = UUID()
+    var type: EventType
+    var timestamp: Date?
+    var sessionId: UUID?
+    var userId: String?
+    var metaData: [String: CodableValue] = [:]
     
     public init(
-        id: UUID,
+        id: UUID = UUID(),
         type: EventType,
-        timestamp: Date,
-        sessionId: UUID,
+        timestamp: Date? = nil,
+        sessionId: UUID? = nil,
         userId: String? = nil,
-        metaData: [String : CodableValue]
+        metaData: [String : CodableValue] = [:]
     ) {
         self.id = id
         self.type = type
