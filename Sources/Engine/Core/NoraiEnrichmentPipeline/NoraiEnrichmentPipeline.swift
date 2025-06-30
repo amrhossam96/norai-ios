@@ -18,9 +18,9 @@ public final class NoraiEnrichmentPipeline {
 
 extension NoraiEnrichmentPipeline: NoraiEnrichmentPipelineProtocol {
     public func enrich(event: NoraiEvent) async -> NoraiEvent {
-        let state = await stateManager.getState()
-        var currentEvent = event
-        for enricher in enrichers {
+        let state: NoraiEngineState = await stateManager.getState()
+        var currentEvent: NoraiEvent = event
+        for enricher: any NoraiEventEnricherProtocol in enrichers {
             currentEvent = await enricher.enrich(event: currentEvent, with: state)
         }
         return currentEvent

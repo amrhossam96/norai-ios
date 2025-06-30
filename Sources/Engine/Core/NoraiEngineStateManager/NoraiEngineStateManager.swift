@@ -20,11 +20,12 @@ public actor NoraiEngineStateManager {
 }
 
 extension NoraiEngineStateManager: NoraiEngineStateManagerProtocol {
-    public func startEngine() async throws {
+    public func startEngine() async throws -> Bool {
         guard !state.isRunning else {
             throw NoraiEngineStateManagerErrors.alreadyRunning
         }
         self.state.isRunning = true
+        return state.isRunning
     }
 
     public func getState() -> NoraiEngineState {

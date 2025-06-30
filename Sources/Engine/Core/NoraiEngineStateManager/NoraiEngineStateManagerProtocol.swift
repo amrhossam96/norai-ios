@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol NoraiEngineStateManagerProtocol {
-    func startEngine() async throws
+    func startEngine() async throws -> Bool
     func getState() async -> NoraiEngineState
     func update(user context: NoraiUserContext) async
     
