@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum CodableValue: Encodable, Sendable {
+public enum CodableValue: Codable, Sendable {
     case string(String)
     case int(Int)
     case double(Double)

@@ -22,18 +22,20 @@ public class NoraiEventsMonitor {
     private weak var delegate: NoraiEventsMonitorDelegateProtocol?
     private var lastFlushingTime: Date?
     private var isTimerOn: Bool = false
+    private let clock: any Clock<Duration>
+
     // MARK: - Public
 
     public let buffer: NoraiBufferProtocol
 
-    init(buffer: NoraiBufferProtocol) {
+    public init(buffer: NoraiBufferProtocol, clock: any Clock<Duration>) {
         self.buffer = buffer
+        self.clock = clock
     }
     
     private func startPeriodicClock() async throws {
-        let clock = ContinuousClock()
         while isTimerOn {
-            try await clock.sleep(until: .now.advanced(by: .seconds(1)))
+            try await clock.sleep(for: .seconds(1))
             print("[Norai] - Tick")
         }
         
@@ -48,5 +50,11 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         self.delegate = delegate
         try await startPeriodicClock()
         isTimerOn = true
+    }
+}
+
+extension Clock {
+    public func sleep(for duration: Duration, tolerance: Duration? = nil) async throws {
+        try await self.sleep(until: self.now.advanced(by: duration), tolerance: tolerance)
     }
 }

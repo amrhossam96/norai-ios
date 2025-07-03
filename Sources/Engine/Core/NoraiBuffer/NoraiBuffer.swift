@@ -8,7 +8,10 @@
 import Foundation
 
 public actor NoraiBuffer {
-    private var events: [NoraiEvent] = []
+    private var events: [NoraiEvent]
+    public init(events: [NoraiEvent] = []) {
+        self.events = events
+    }
 }
 
 extension NoraiBuffer: NoraiBufferProtocol {

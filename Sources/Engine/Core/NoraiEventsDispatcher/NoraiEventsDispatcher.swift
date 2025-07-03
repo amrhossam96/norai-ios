@@ -8,12 +8,17 @@
 import Foundation
 
 struct NoraiEventsDispatcher {
-    let client: NoraiNetworkClientProtocol
-    let cache: NoraiCachingLayerProtocol
+    let client: any NoraiNetworkClientProtocol
+    let cache: any NoraiCachingLayerProtocol
+    var networkMonitor: any NoraiNetworkMonitorProtocol
 }
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
     func dispatch(events: [NoraiEvent]) async {
-        
+        guard await networkMonitor.isNetworkAvailable() else {
+            // TODO: Cache events
+            return
+        }
+        // TODO: - Send Over Network
     }
 }

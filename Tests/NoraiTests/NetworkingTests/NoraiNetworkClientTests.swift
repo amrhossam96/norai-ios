@@ -82,7 +82,7 @@ struct NoraiNetworkClientTests {
     }
     
     @Test func executeCallsPreRequestsMiddlewares() async throws {
-        let mockedMiddlewareExecutor = MockedMiddlewareExecutor()
+        let mockedMiddlewareExecutor: MockedMiddlewareExecutor = MockedMiddlewareExecutor()
         let mockURLSession: MockURLSession = MockURLSession(mockData: MockEndPoint.someData,
                                             mockURLResponse: MockEndPoint.validResponse)
         let sut: NoraiNetworkClient = NoraiNetworkClient(urlSession: mockURLSession,
@@ -92,7 +92,7 @@ struct NoraiNetworkClientTests {
     }
 
     @Test func executeCallsPOSTResponseMiddlewares() async throws {
-        let mockedMiddlewareExecutor = MockedMiddlewareExecutor()
+        let mockedMiddlewareExecutor: MockedMiddlewareExecutor = MockedMiddlewareExecutor()
         let mockURLSession: MockURLSession = MockURLSession(mockData: MockEndPoint.someData,
                                             mockURLResponse: MockEndPoint.validResponse)
         let sut: NoraiNetworkClient = NoraiNetworkClient(urlSession: mockURLSession,
@@ -103,7 +103,7 @@ struct NoraiNetworkClientTests {
     
     @Test func executeThrowsMandatoryMiddlewareFailure() async throws {
         await #expect(throws: NoraiNetworkError.mandatoryMiddlewareFailure(underlyingError: "The operation couldn’t be completed. (Norai.NoraiNetworkError error 2.)").self) {
-            let mockedMiddlewareExecutor = MockedMiddlewareExecutor(middlewares: [MockedFailableMiddleware()])
+            let mockedMiddlewareExecutor: MockedMiddlewareExecutor = MockedMiddlewareExecutor(middlewares: [MockedFailableMiddleware()])
             let mockURLSession: MockURLSession = MockURLSession(mockData: MockEndPoint.someData,
                                                 mockURLResponse: MockEndPoint.validResponse)
             let sut: NoraiNetworkClient = NoraiNetworkClient(urlSession: mockURLSession,

@@ -9,4 +9,5 @@ import Foundation
 
 public protocol NoraiEventsDispatcherProtocol {
     func dispatch(events: [NoraiEvent]) async
+    var networkMonitor: NoraiNetworkMonitorProtocol { get }
 }

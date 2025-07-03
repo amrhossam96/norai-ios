@@ -61,7 +61,7 @@ extension NoraiEngine: NoraiEngineProtocol {
 
 extension NoraiEngine: NoraiEventsMonitorDelegateProtocol {
     public func shouldFlush() async {
-        let bufferedEvents = await buffer.drain()
+        let bufferedEvents: [NoraiEvent] = await buffer.drain()
         
     }
 }

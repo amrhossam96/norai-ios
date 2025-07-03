@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct NoraiEvent: Encodable, Sendable {
+public struct NoraiEvent: Codable, Sendable {
     var id: UUID = UUID()
     var type: EventType
     var timestamp: Date?
