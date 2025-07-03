@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct NoraiConfiguration {
+public struct NoraiConfiguration: Sendable {
     let apiKey: String
     let environment: NoraiEnvironment
     let logLevel: LogLevel

@@ -8,7 +8,7 @@
 import Foundation
 import Norai
 
-class MockedNoraiLogger: NoraiLoggerProtocol {
+actor MockedNoraiLogger: NoraiLoggerProtocol {
     var isLogCalled: Bool = false
     var isLogErrorCalled: Bool = false
     var isGetCurrentLogLevelCalled: Bool = false

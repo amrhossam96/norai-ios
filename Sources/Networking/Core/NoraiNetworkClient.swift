@@ -7,11 +7,11 @@
 
 import Foundation
 
-public protocol NoraiNetworkClientProtocol {
+public protocol NoraiNetworkClientProtocol: Sendable {
     func execute<T>(_ endpoint: any NoraiEndpoint) async throws -> T where T: Decodable
 }
 
-public class NoraiNetworkClient {
+public class NoraiNetworkClient: @unchecked Sendable {
     private let urlSession: any URLSessionProtocol
     private let middlewareExecutor: any MiddlewareExecutorProtocol
 

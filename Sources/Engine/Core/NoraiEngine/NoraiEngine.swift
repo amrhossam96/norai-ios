@@ -13,10 +13,10 @@ public enum NoraiEngineErrors: Error {
 
 public final class NoraiEngine {
     private let config: NoraiConfiguration
-    private var logger: any NoraiLoggerProtocol
+    private let logger: any NoraiLoggerProtocol
     
     private let stateManager: any NoraiEngineStateManagerProtocol
-    private var enrichmentPipeline: any NoraiEnrichmentPipelineProtocol
+    private let enrichmentPipeline: any NoraiEnrichmentPipelineProtocol
     
     private let eventsMonitor: any NoraiEventsMonitorProtocol
     private let buffer: any NoraiBufferProtocol
@@ -43,7 +43,7 @@ public final class NoraiEngine {
 extension NoraiEngine: NoraiEngineProtocol {
     public func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
-        logger.log(enrichedEvent, level: config.logLevel)
+        await logger.log(enrichedEvent, level: config.logLevel)
     }
     
     public func identify(user context: NoraiUserContext) async {
@@ -52,7 +52,7 @@ extension NoraiEngine: NoraiEngineProtocol {
     
     public func start() async throws {
         guard try await stateManager.startEngine() else {
-            logger.log(NoraiEngineErrors.alreadyStarted, level: .error)
+            await logger.log(NoraiEngineErrors.alreadyStarted, level: .error)
             throw NoraiEngineErrors.alreadyStarted
         }
         try await eventsMonitor.startMonitoring(with: self)
@@ -62,6 +62,12 @@ extension NoraiEngine: NoraiEngineProtocol {
 extension NoraiEngine: NoraiEventsMonitorDelegateProtocol {
     public func shouldFlush() async {
         let bufferedEvents: [NoraiEvent] = await buffer.drain()
-        
+        do {
+            guard try await dispatcher.dispatch(events: bufferedEvents) else {
+                return
+            }
+        } catch {
+            // TODO: Network unavailable error
+        }
     }
 }

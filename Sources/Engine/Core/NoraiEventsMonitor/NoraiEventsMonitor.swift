@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NoraiEventsMonitorDelegateProtocol: AnyObject {
+public protocol NoraiEventsMonitorDelegateProtocol: AnyObject, Sendable {
     func shouldFlush() async
 }
 
@@ -15,7 +15,7 @@ public enum NoraiEventsMonitorErrors: Error {
     case alreadyStarted
 }
 
-public class NoraiEventsMonitor {
+public actor NoraiEventsMonitor {
     
     // MARK: - Private
 
@@ -23,6 +23,7 @@ public class NoraiEventsMonitor {
     private var lastFlushingTime: Date?
     private var isTimerOn: Bool = false
     private let clock: any Clock<Duration>
+    private var timerTask: Task<Void, Error>?
 
     // MARK: - Public
 
@@ -33,10 +34,12 @@ public class NoraiEventsMonitor {
         self.clock = clock
     }
     
-    private func startPeriodicClock() async throws {
-        while isTimerOn {
-            try await clock.sleep(for: .seconds(1))
-            print("[Norai] - Tick")
+    private func startPeriodicClock() {
+        timerTask = Task {
+            while isTimerOn {
+                try await clock.sleep(for: .seconds(1))
+                print("[Norai] - Tick")
+            }
         }
         
     }
@@ -48,13 +51,13 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
             throw NoraiEventsMonitorErrors.alreadyStarted
         }
         self.delegate = delegate
-        try await startPeriodicClock()
         isTimerOn = true
+        startPeriodicClock()
     }
-}
-
-extension Clock {
-    public func sleep(for duration: Duration, tolerance: Duration? = nil) async throws {
-        try await self.sleep(until: self.now.advanced(by: duration), tolerance: tolerance)
+    
+    public func stopMonitoring() async throws {
+        timerTask?.cancel()
+        timerTask = nil
+        isTimerOn = false
     }
 }

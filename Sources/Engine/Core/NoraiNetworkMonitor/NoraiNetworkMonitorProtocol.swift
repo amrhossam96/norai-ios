@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NoraiNetworkMonitorProtocol {
+public protocol NoraiNetworkMonitorProtocol: Sendable {
     func startMonitoring() async
     func isNetworkAvailable() async -> Bool
 }

@@ -7,18 +7,31 @@
 
 import Foundation
 
-struct NoraiEventsDispatcher {
+enum NoraiEventsDispatcherErrors: Error {
+    case networkUnavailable
+}
+
+actor NoraiEventsDispatcher {
     let client: any NoraiNetworkClientProtocol
     let cache: any NoraiCachingLayerProtocol
     var networkMonitor: any NoraiNetworkMonitorProtocol
+    
+    init(client: any NoraiNetworkClientProtocol, cache: any NoraiCachingLayerProtocol, networkMonitor: any NoraiNetworkMonitorProtocol) {
+        self.client = client
+        self.cache = cache
+        self.networkMonitor = networkMonitor
+    }
 }
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
-    func dispatch(events: [NoraiEvent]) async {
+    func dispatch(events: [NoraiEvent]) async throws -> Bool {
         guard await networkMonitor.isNetworkAvailable() else {
             // TODO: Cache events
-            return
+            throw NoraiEventsDispatcherErrors.networkUnavailable
         }
-        // TODO: - Send Over Network
+        let request: NoraiBatchEventsRequest = NoraiBatchEventsRequest(events: events)
+        let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch(request)
+        let response: NoraiBatchEventsResponse = try await client.execute(endpoint)
+        return response.status == true
     }
 }

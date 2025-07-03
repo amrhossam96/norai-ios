@@ -7,8 +7,8 @@
 
 import Foundation
 
-public protocol NoraiLoggerProtocol {
-    func log(_ event: NoraiEvent, level: LogLevel)
-    func log(_ error: any Error, level: LogLevel)
-    func getCurrentLogLevel() -> LogLevel
+public protocol NoraiLoggerProtocol: Sendable {
+    func log(_ event: NoraiEvent, level: LogLevel) async
+    func log(_ error: any Error, level: LogLevel) async
+    func getCurrentLogLevel() async -> LogLevel
 }
