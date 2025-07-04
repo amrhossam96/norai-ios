@@ -63,9 +63,7 @@ extension NoraiEngine: NoraiEventsMonitorDelegateProtocol {
     public func shouldFlush() async {
         let bufferedEvents: [NoraiEvent] = await buffer.drain()
         do {
-            guard try await dispatcher.dispatch(events: bufferedEvents) else {
-                return
-            }
+            try await dispatcher.dispatch(events: bufferedEvents)
         } catch {
             // TODO: Network unavailable error
         }

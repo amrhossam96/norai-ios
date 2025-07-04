@@ -11,8 +11,7 @@ import Norai
 actor MockedDispatcher: NoraiEventsDispatcherProtocol {
     var isDispatchCalled: Bool = false
 
-    func dispatch(events: [NoraiEvent]) async throws -> Bool {
+    func dispatch(events: [NoraiEvent]) async throws {
         isDispatchCalled = true
-        return isDispatchCalled
     }
 }

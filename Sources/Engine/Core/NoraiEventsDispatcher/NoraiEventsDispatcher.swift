@@ -16,7 +16,11 @@ actor NoraiEventsDispatcher {
     let cache: any NoraiCachingLayerProtocol
     var networkMonitor: any NoraiNetworkMonitorProtocol
     
-    init(client: any NoraiNetworkClientProtocol, cache: any NoraiCachingLayerProtocol, networkMonitor: any NoraiNetworkMonitorProtocol) {
+    init(
+        client: any NoraiNetworkClientProtocol,
+        cache: any NoraiCachingLayerProtocol,
+        networkMonitor: any NoraiNetworkMonitorProtocol
+    ) {
         self.client = client
         self.cache = cache
         self.networkMonitor = networkMonitor
@@ -24,14 +28,13 @@ actor NoraiEventsDispatcher {
 }
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
-    func dispatch(events: [NoraiEvent]) async throws -> Bool {
+    func dispatch(events: [NoraiEvent]) async throws {
         guard await networkMonitor.isNetworkAvailable() else {
             // TODO: Cache events
             throw NoraiEventsDispatcherErrors.networkUnavailable
         }
         let request: NoraiBatchEventsRequest = NoraiBatchEventsRequest(events: events)
         let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch(request)
-        let response: NoraiBatchEventsResponse = try await client.execute(endpoint)
-        return response.status == true
+        let _: NoraiBatchEventsResponse = try await client.execute(endpoint)
     }
 }

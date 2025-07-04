@@ -8,5 +8,5 @@
 import Foundation
 
 public protocol NoraiEventsDispatcherProtocol: Sendable {
-    func dispatch(events: [NoraiEvent]) async throws -> Bool
+    func dispatch(events: [NoraiEvent]) async throws
 }
