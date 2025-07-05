@@ -13,10 +13,7 @@ public struct DeviceInfoProcessor: NoraiEventProcessorProtocol {
 
     public func process(event: NoraiEvent) async -> NoraiEvent {
         var eventCopy = event
-        eventCopy.metaData["deviceModel"] = await .string(UIDevice.current.model)
-        eventCopy.metaData["osVersion"] = await .string(UIDevice.current.systemVersion)
-        eventCopy.metaData["deviceName"] = await .string(UIDevice.current.name)
-        eventCopy.metaData["systemName"] = await .string(UIDevice.current.systemName)
+        
         return eventCopy
     }
 }
