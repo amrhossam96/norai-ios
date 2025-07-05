@@ -11,7 +11,7 @@ import UIKit
 public struct DeviceInfoProcessor: NoraiEventProcessorProtocol {
     public init() {}
 
-    public func process(event: NoraiEvent) async -> NoraiEvent {
+    public func process(event: NoraiEvent, timestamp: Date) async -> NoraiEvent {
         var eventCopy = event
         
         return eventCopy
