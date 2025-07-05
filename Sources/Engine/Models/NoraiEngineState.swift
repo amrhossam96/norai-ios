@@ -15,8 +15,8 @@ public struct NoraiEngineState: Sendable {
     public var userContext: NoraiUserContext?
     
     public init(
-        isRunning: Bool,
-        sessionId: UUID,
+        isRunning: Bool = false,
+        sessionId: UUID = UUID(),
         lastScreen: String? = nil,
         funnelStep: String? = nil,
         userContext: NoraiUserContext? = nil

@@ -13,7 +13,9 @@ public actor NoraiNetworkMonitor {
     private let queue: DispatchQueue
     private var isConnected: Bool
     
-    public init(monitor: NWPathMonitor, queue: DispatchQueue, isConnected: Bool = false) {
+    public init(monitor: NWPathMonitor = NWPathMonitor(),
+                queue: DispatchQueue = DispatchQueue(label: "com.norai.backgroundQueue", qos: .background),
+                isConnected: Bool = false) {
         self.monitor = monitor
         self.queue = queue
         self.isConnected = isConnected
