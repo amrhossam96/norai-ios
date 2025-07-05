@@ -8,15 +8,19 @@
 import Foundation
 import Norai
 
+enum MockedNoraiEngineStateManagerMessages {
+    case startEngine
+}
+
 actor MockedNoraiEngineStateManager: NoraiEngineStateManagerProtocol {
-    var isStartEngineCalled: Bool = false
+    var startEngineMessages: [MockedNoraiEngineStateManagerMessages] = []
     var engineState: NoraiEngineState = NoraiEngineState(isRunning: true, sessionId: UUID())
     var getStateCalled: Bool = false
     var isUpdateCalled: Bool = false
 
-    func startEngine() async throws -> Bool {
-        isStartEngineCalled = true
-        return isStartEngineCalled
+    func startEngine() async -> Bool {
+        startEngineMessages.append(.startEngine)
+        return startEngineMessages.count == 1
     }
     
     func getState() async -> NoraiEngineState {

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Norai
+@testable import Norai
 import Testing
 
 struct NoraiEngineTests {
@@ -31,8 +31,29 @@ struct NoraiEngineTests {
     @Test func startShouldCallStartEngineOnStateManager() async throws {
         let sut: NoraiEngine = makeSUT()
         try await sut.start()
-        let isStartEngineCalled = await mockedStateManager.isStartEngineCalled
-        #expect(isStartEngineCalled == true)
+        let startEngineMessages = await mockedStateManager.startEngineMessages
+        #expect(startEngineMessages == [.startEngine])
+    }
+    
+    @Test func trackShouldCallLogOnLogger() async {
+        let sut: NoraiEngine = makeSUT()
+        await sut.track(event: anyEvent())
+        let isLogCalled: Bool = await mockedLogger.isLogCalled
+        #expect(isLogCalled == true)
+    }
+    
+    @Test func trackCallsEnrichInEnrichmentPipeline() async {
+        let sut: NoraiEngine = makeSUT()
+        await sut.track(event: anyEvent())
+        let isEnrichCalled = await mockedEnrichmentPipeline.isEnrichCalled
+        #expect(isEnrichCalled == true)
+    }
+    
+    @Test func trackCallsLogInLogger() async {
+        let sut: NoraiEngine = makeSUT()
+        await sut.track(event: anyEvent())
+        let isLogCalled = await mockedLogger.isLogCalled
+        #expect(isLogCalled == true)
     }
     
     @Test func startShouldCallStartMonitoring() async throws {
@@ -40,6 +61,28 @@ struct NoraiEngineTests {
         try await sut.start()
         let isStartMonitoringCalled = await mockedEventsMonitor.isStartMonitoringCalled
         #expect(isStartMonitoringCalled == true)
+    }
+    
+    @Test func startShouldMakeEngineStateRunning() async throws {
+        let sut: NoraiEngine = makeSUT()
+        try await sut.start()
+        let isRunning = await mockedStateManager.engineState.isRunning
+        #expect(isRunning == true)
+    }
+    
+    @Test func startShouldThrowIfEngineIsAlreadyRunning() async {
+        await #expect(throws: NoraiEngineErrors.alreadyStarted) {
+            let sut: NoraiEngine = makeSUT()
+            try await sut.start()
+            try await sut.start()
+        }
+    }
+    
+    @Test func trackShouldCallAddOnBuffer() async {
+        let sut: NoraiEngine = makeSUT()
+        await sut.track(event: anyEvent())
+        let isAddCalled = await mockedBuffer.isAddCalled
+        #expect(isAddCalled == true)
     }
 }
 
@@ -51,5 +94,9 @@ extension NoraiEngineTests {
                     enrichmentPipeline: mockedEnrichmentPipeline,
                     eventsMonitor: mockedEventsMonitor,
                     dispatcher: mockedDispatcher)
+    }
+    
+    func anyEvent() -> NoraiEvent {
+        NoraiEvent(type: EventType.allCases.randomElement()!)
     }
 }

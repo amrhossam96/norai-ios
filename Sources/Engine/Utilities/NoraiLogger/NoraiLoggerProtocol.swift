@@ -10,5 +10,6 @@ import Foundation
 public protocol NoraiLoggerProtocol: Sendable {
     func log(_ event: NoraiEvent, level: LogLevel) async
     func log(_ error: any Error, level: LogLevel) async
+    func log(_ message: String) async
     func getCurrentLogLevel() async -> LogLevel
 }

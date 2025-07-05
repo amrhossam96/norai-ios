@@ -24,4 +24,8 @@ extension NoraiBuffer: NoraiBufferProtocol {
         let drainedEvents: [NoraiEvent] = events
         return drainedEvents
     }
+    
+    public func shouldFlush() async -> Bool {
+        return events.count >= 20
+    }
 }

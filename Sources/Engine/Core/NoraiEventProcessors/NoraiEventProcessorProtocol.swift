@@ -8,5 +8,5 @@
 import Foundation
 
 public protocol NoraiEventProcessorProtocol {
-    func process(event: NoraiEvent) async -> NoraiEvent
+    func process(event: NoraiEvent, timestamp: Date) async -> NoraiEvent
 }

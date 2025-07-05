@@ -28,4 +28,8 @@ extension NoraiLogger: NoraiLoggerProtocol {
     public func log(_ error: any Error, level: LogLevel) {
         print("[Norai - \(level.description)] - Error: \(error.localizedDescription)")
     }
+    
+    public func log(_ message: String) async {
+        print("[Norai - \(currentLevel.description)]: \(message)")
+    }
 }

@@ -8,9 +8,9 @@
 import Foundation
 
 public struct TimestampProcessor: NoraiEventProcessorProtocol {
-    public func process(event: NoraiEvent) async -> NoraiEvent {
+    public func process(event: NoraiEvent, timestamp: Date) async -> NoraiEvent {
         var eventCopy = event
-        eventCopy.timestamp = .now
+        eventCopy.timestamp = timestamp
         return eventCopy
     }
 }

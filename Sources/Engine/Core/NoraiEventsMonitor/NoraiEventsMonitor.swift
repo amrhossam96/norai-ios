@@ -7,10 +7,6 @@
 
 import Foundation
 
-public protocol NoraiEventsMonitorDelegateProtocol: AnyObject, Sendable {
-    func shouldFlush() async
-}
-
 public enum NoraiEventsMonitorErrors: Error {
     case alreadyStarted
 }
@@ -19,38 +15,64 @@ public actor NoraiEventsMonitor {
     
     // MARK: - Private
 
-    private weak var delegate: NoraiEventsMonitorDelegateProtocol?
     private var lastFlushingTime: Date?
     private var isTimerOn: Bool = false
     private let clock: any Clock<Duration>
     private var timerTask: Task<Void, Error>?
-
+    private var streamContinuation: AsyncStream<Void>.Continuation?
+    private var logger: NoraiLoggerProtocol
     // MARK: - Public
 
     public let buffer: NoraiBufferProtocol
 
-    public init(buffer: NoraiBufferProtocol, clock: any Clock<Duration>) {
+    public init(buffer: NoraiBufferProtocol, clock: any Clock<Duration>, logger: NoraiLoggerProtocol) {
         self.buffer = buffer
         self.clock = clock
+        self.logger = logger
     }
     
     private func startPeriodicClock() {
         timerTask = Task {
             while isTimerOn {
                 try await clock.sleep(for: .seconds(1))
-                print("[Norai] - Tick")
+                await logger.log("Tick!")
+                if await shouldFlush() {
+                    lastFlushingTime = .now
+                    streamContinuation?.yield()
+                    await logger.log(lastFlushingTime?.description ?? "")
+                }
             }
         }
+    }
+    
+    private func shouldFlush() async -> Bool {
+        let timeSinceLastFlush = shouldFlushBasedOnTime()
+        let bufferIsFull = await shouldFlushBasedOnBufferSize()
+        return timeSinceLastFlush || bufferIsFull
+    }
+    
+    private func shouldFlushBasedOnTime() -> Bool {
+        guard let lastFlushingTime = lastFlushingTime else {
+            return true
+        }
+        
+        return Date().timeIntervalSince(lastFlushingTime) >= 20.0
+    }
+    
+    private func shouldFlushBasedOnBufferSize() async -> Bool {
+        return await buffer.shouldFlush()
+    }
+    
+    private func setContinution(_ continuation: AsyncStream<Void>.Continuation) {
         
     }
 }
 
 extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
-    public func startMonitoring(with delegate: NoraiEventsMonitorDelegateProtocol) async throws {
+    public func startMonitoring() async throws {
         guard !isTimerOn else {
             throw NoraiEventsMonitorErrors.alreadyStarted
         }
-        self.delegate = delegate
         isTimerOn = true
         startPeriodicClock()
     }
@@ -59,5 +81,15 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         timerTask?.cancel()
         timerTask = nil
         isTimerOn = false
+        streamContinuation?.finish()
+        streamContinuation = nil
+    }
+    
+    nonisolated public func listenToMonitorStream() -> AsyncStream<Void> {
+        return AsyncStream<Void> { continuation in
+            Task {
+                await self.setContinution(continuation)
+            }
+        }
     }
 }

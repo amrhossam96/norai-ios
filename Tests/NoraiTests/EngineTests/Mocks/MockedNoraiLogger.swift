@@ -13,7 +13,7 @@ actor MockedNoraiLogger: NoraiLoggerProtocol {
     var isLogErrorCalled: Bool = false
     var isGetCurrentLogLevelCalled: Bool = false
     var currentLogLevel: LogLevel = .none
-
+    var isLogMessageCalled: Bool = false
     func log(_ event: NoraiEvent, level: LogLevel) {
         isLogCalled = true
     }
@@ -25,5 +25,9 @@ actor MockedNoraiLogger: NoraiLoggerProtocol {
     func getCurrentLogLevel() -> LogLevel {
         isGetCurrentLogLevelCalled = true
         return currentLogLevel
+    }
+    
+    func log(_ message: String) async {
+        isLogMessageCalled = true
     }
 }

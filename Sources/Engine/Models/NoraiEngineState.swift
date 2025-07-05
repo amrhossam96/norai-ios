@@ -8,11 +8,11 @@
 import Foundation
 
 public struct NoraiEngineState: Sendable {
-    var isRunning: Bool
-    var sessionId: UUID
-    var lastScreen: String?
-    var funnelStep: String?
-    var userContext: NoraiUserContext?
+    public var isRunning: Bool
+    public var sessionId: UUID
+    public var lastScreen: String?
+    public var funnelStep: String?
+    public var userContext: NoraiUserContext?
     
     public init(
         isRunning: Bool,

@@ -9,6 +9,7 @@ import Foundation
 import Norai
 
 actor MockedBuffer: NoraiBufferProtocol {
+    var shouldFlush: Bool = false
     var isAddCalled: Bool = false
     var isDrainCalled: Bool = false
 
@@ -19,5 +20,9 @@ actor MockedBuffer: NoraiBufferProtocol {
     func drain() async -> [NoraiEvent] {
         isDrainCalled = true
         return []
+    }
+    
+    func shouldFlush() async -> Bool {
+        return shouldFlush
     }
 }

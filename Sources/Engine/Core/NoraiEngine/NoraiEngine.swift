@@ -11,7 +11,7 @@ public enum NoraiEngineErrors: Error {
     case alreadyStarted
 }
 
-public final class NoraiEngine {
+public final actor NoraiEngine {
     private let config: NoraiConfiguration
     private let logger: any NoraiLoggerProtocol
     
@@ -38,12 +38,27 @@ public final class NoraiEngine {
         self.buffer = eventsMonitor.buffer
         self.dispatcher = dispatcher
     }
+    
+    private func startListeningToMonitorStream() async {
+        let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
+        Task.detached(priority: .background) {
+            for await _ in stream {
+                let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
+                do {
+                    try await self.dispatcher.dispatch(events: bufferedEvents)
+                } catch {
+                    
+                }
+            }
+        }
+    }
 }
 
 extension NoraiEngine: NoraiEngineProtocol {
     public func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
         await logger.log(enrichedEvent, level: config.logLevel)
+        await buffer.add(enrichedEvent)
     }
     
     public func identify(user context: NoraiUserContext) async {
@@ -51,21 +66,11 @@ extension NoraiEngine: NoraiEngineProtocol {
     }
     
     public func start() async throws {
-        guard try await stateManager.startEngine() else {
+        guard await stateManager.startEngine() else {
             await logger.log(NoraiEngineErrors.alreadyStarted, level: .error)
             throw NoraiEngineErrors.alreadyStarted
         }
-        try await eventsMonitor.startMonitoring(with: self)
-    }
-}
-
-extension NoraiEngine: NoraiEventsMonitorDelegateProtocol {
-    public func shouldFlush() async {
-        let bufferedEvents: [NoraiEvent] = await buffer.drain()
-        do {
-            try await dispatcher.dispatch(events: bufferedEvents)
-        } catch {
-            // TODO: Network unavailable error
-        }
+        try await eventsMonitor.startMonitoring()
+        await startListeningToMonitorStream()
     }
 }
