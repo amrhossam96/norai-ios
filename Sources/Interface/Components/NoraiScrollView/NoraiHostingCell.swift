@@ -11,11 +11,8 @@ class NoraiHostingCell<Content: View>: UICollectionViewCell {
     private var hostingController: UIHostingController<Content>?
     
     func host(rootView: Content) {
-        // Clean up existing hosting controller
-        if let existingController = hostingController {
-            existingController.view.removeFromSuperview()
-            existingController.removeFromParent()
-        }
+        hostingController?.view.removeFromSuperview()
+        hostingController?.removeFromParent()
         
         let controller = UIHostingController(rootView: rootView)
         hostingController = controller

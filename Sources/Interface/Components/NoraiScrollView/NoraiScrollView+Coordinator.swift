@@ -10,13 +10,17 @@ import SwiftUI
 public extension NoraiScrollView {
     class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         
-        var data: Data
-        let content: (Data.Element) -> Content
+        private var data: Data
+        private let content: (Data.Element) -> Content
         var visibleIndexPaths: Set<IndexPath> = []
         
         init(data: Data, content: @escaping (Data.Element) -> Content) {
             self.data = data
             self.content = content
+        }
+        
+        func updateData(_ newData: Data) {
+            self.data = newData
         }
         
         public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {

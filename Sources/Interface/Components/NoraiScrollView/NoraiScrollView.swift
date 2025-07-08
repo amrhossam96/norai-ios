@@ -36,13 +36,8 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
-        let coordinator = context.coordinator
-        coordinator.data = data
-        let visibleIndexPaths = uiView.indexPathsForVisibleItems
-        
-        uiView.performBatchUpdates({
-            uiView.reloadItems(at: visibleIndexPaths)
-        }, completion: nil)
+        context.coordinator.updateData(data)
+        uiView.reloadData()
     }
     
     public func makeCoordinator() -> Coordinator {
