@@ -13,38 +13,14 @@ public extension NoraiScrollView {
         private var data: Data
         private let content: (Data.Element) -> Content
         var visibleIndexPaths: Set<IndexPath> = []
-        private weak var collectionView: UICollectionView?
         
         init(data: Data, content: @escaping (Data.Element) -> Content) {
             self.data = data
             self.content = content
         }
         
-        func updateData(_ newData: Data, collectionView: UICollectionView? = nil) {
-            let oldData = self.data
+        func updateData(_ newData: Data) {
             self.data = newData
-            
-            // Store reference to collection view for efficient updates
-            if let cv = collectionView {
-                self.collectionView = cv
-                updateVisibleCells()
-            }
-        }
-        
-        private func updateVisibleCells() {
-            guard let collectionView = self.collectionView else { return }
-            
-            // Update visible cells efficiently
-            for indexPath in collectionView.indexPathsForVisibleItems {
-                guard indexPath.item < data.count,
-                      let cell = collectionView.cellForItem(at: indexPath) as? NoraiHostingCell<Content> else {
-                    continue
-                }
-                
-                let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
-                let itemID = AnyHashable(item.id)
-                cell.host(rootView: content(item), itemID: itemID)
-            }
         }
         
         public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -61,16 +37,8 @@ public extension NoraiScrollView {
             }
             
             let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
-            let itemID = AnyHashable(item.id)
-            cell.host(rootView: content(item), itemID: itemID)
+            cell.host(rootView: content(item))
             return cell
-        }
-        
-        public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-            // Clean up hosting controller when cell goes off screen to prevent memory issues
-            if let hostingCell = cell as? NoraiHostingCell<Content> {
-                hostingCell.cleanupHostingController()
-            }
         }
         
         private func checkVisibilityManually(in collectionView: UICollectionView) {

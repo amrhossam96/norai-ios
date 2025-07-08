@@ -36,14 +36,23 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
-        // Use efficient cell updating instead of reloadData()
-        context.coordinator.updateData(data, collectionView: uiView)
+        // Update the coordinator's data
+        context.coordinator.updateData(data)
         
-        // Only reload if the count changed significantly (items added/removed)
-        // This prevents unnecessary full reloads for state changes
-        let currentCount = uiView.numberOfItems(inSection: 0)
-        if currentCount != data.count {
-            uiView.reloadData()
+        // Perform batch updates to maintain scroll position and animations
+        uiView.performBatchUpdates {
+            // This triggers a refresh of visible cells without losing scroll position
+        } completion: { _ in
+            // Ensure all visible cells are updated with current state
+            DispatchQueue.main.async {
+                for indexPath in uiView.indexPathsForVisibleItems {
+                    if let cell = uiView.cellForItem(at: indexPath) as? NoraiHostingCell<Content>,
+                       indexPath.item < data.count {
+                        let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
+                        cell.host(rootView: content(item))
+                    }
+                }
+            }
         }
     }
     

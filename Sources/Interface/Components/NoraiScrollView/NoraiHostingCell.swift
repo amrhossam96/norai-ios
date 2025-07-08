@@ -9,28 +9,14 @@ import SwiftUI
 
 class NoraiHostingCell<Content: View>: UICollectionViewCell {
     private var hostingController: UIHostingController<Content>?
-    private var currentContentID: AnyHashable?
     
-    func host(rootView: Content, itemID: AnyHashable? = nil) {
-        // If we have the same item ID and an existing controller, try to update instead of recreate
-        if let existingController = hostingController,
-           let itemID = itemID,
-           currentContentID == itemID {
-            // Update the existing hosting controller's root view
-            existingController.rootView = rootView
-            existingController.view.setNeedsLayout()
-            return
-        }
-        
-        // Remove existing controller if any
+    func host(rootView: Content) {
+        // Always recreate the hosting controller to ensure proper SwiftUI updates
         hostingController?.view.removeFromSuperview()
         hostingController?.removeFromParent()
         
-        // Create new controller
         let controller = UIHostingController(rootView: rootView)
         hostingController = controller
-        currentContentID = itemID
-        
         controller.view.backgroundColor = .clear
         controller.view.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(controller.view)
@@ -45,15 +31,9 @@ class NoraiHostingCell<Content: View>: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // Don't remove the hosting controller here as we want to reuse it when possible
-        currentContentID = nil
-    }
-    
-    func cleanupHostingController() {
         hostingController?.view.removeFromSuperview()
         hostingController?.removeFromParent()
         hostingController = nil
-        currentContentID = nil
     }
     
     override func systemLayoutSizeFitting(_ targetSize: CGSize) -> CGSize {
