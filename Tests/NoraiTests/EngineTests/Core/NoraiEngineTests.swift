@@ -84,6 +84,13 @@ struct NoraiEngineTests {
         let isAddCalled = await mockedBuffer.isAddCalled
         #expect(isAddCalled == true)
     }
+    
+    @Test func identifyShouldCallUpdateUserContext() async {
+        let sut: NoraiEngine = makeSUT()
+        await sut.identify(user: NoraiUserContext(isLoggedIn: true))
+        let isUpdateCalled: Bool = await mockedStateManager.isUpdateCalled
+        #expect(isUpdateCalled == true)
+    }
 }
 
 extension NoraiEngineTests {

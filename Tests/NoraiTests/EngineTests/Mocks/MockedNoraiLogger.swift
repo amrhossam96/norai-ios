@@ -14,11 +14,12 @@ actor MockedNoraiLogger: NoraiLoggerProtocol {
     var isGetCurrentLogLevelCalled: Bool = false
     var currentLogLevel: LogLevel = .none
     var isLogMessageCalled: Bool = false
+
     func log(_ event: NoraiEvent, level: LogLevel) {
         isLogCalled = true
     }
     
-    func log(_ error: any Error, level: Norai.LogLevel) {
+    func log(_ error: any Error, level: LogLevel) {
         isLogErrorCalled = true
     }
     

@@ -9,6 +9,7 @@ import Foundation
 
 public enum NoraiEngineErrors: Error {
     case alreadyStarted
+    case failedToDispatchEvents
 }
 
 public final actor NoraiEngine {
@@ -39,7 +40,7 @@ public final actor NoraiEngine {
         self.dispatcher = dispatcher
     }
     
-    private func startListeningToMonitorStream() async {
+    private func startListeningToMonitorStream() async throws {
         let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
             for await _ in stream {
@@ -47,7 +48,7 @@ public final actor NoraiEngine {
                 do {
                     try await self.dispatcher.dispatch(events: bufferedEvents)
                 } catch {
-                    
+                    throw NoraiEngineErrors.failedToDispatchEvents
                 }
             }
         }
@@ -71,6 +72,6 @@ extension NoraiEngine: NoraiEngineProtocol {
             throw NoraiEngineErrors.alreadyStarted
         }
         try await eventsMonitor.startMonitoring()
-        await startListeningToMonitorStream()
+        try await startListeningToMonitorStream()
     }
 }
