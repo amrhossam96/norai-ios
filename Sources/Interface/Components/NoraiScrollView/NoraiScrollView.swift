@@ -8,11 +8,11 @@
 import UIKit
 import SwiftUI
 
-struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepresentable where Data.Element: Identifiable {
+public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepresentable where Data.Element: Identifiable {
     let data: Data
     let content: (Data.Element) -> Content
     
-    func makeUIView(context: Context) -> UICollectionView {
+    public func makeUIView(context: Context) -> UICollectionView {
         let layout = UICollectionViewCompositionalLayout { _, _ in
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                                   heightDimension: .estimated(250))
@@ -30,12 +30,12 @@ struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepre
         return collectionView
     }
     
-    func updateUIView(_ uiView: UICollectionView, context: Context) {
+    public func updateUIView(_ uiView: UICollectionView, context: Context) {
         context.coordinator.data = data
         uiView.reloadData()
     }
     
-    func makeCoordinator() -> Coordinator {
+    public func makeCoordinator() -> Coordinator {
         Coordinator(data: data, content: content)
     }
 }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension NoraiScrollView {
+public extension NoraiScrollView {
     class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         
         var data: Data
@@ -19,11 +19,11 @@ extension NoraiScrollView {
             self.content = content
         }
         
-        func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
             data.count
         }
         
-        func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? NoraiHostingCell<Content> else {
                 return UICollectionViewCell()
             }
@@ -32,11 +32,11 @@ extension NoraiScrollView {
             return cell
         }
         
-        func checkVisibilityManually(in collectionView: UICollectionView) {
+        private func checkVisibilityManually(in collectionView: UICollectionView) {
             scrollViewDidScroll(collectionView)
         }
         
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        public func scrollViewDidScroll(_ scrollView: UIScrollView) {
             guard let collectionView = scrollView as? UICollectionView else { return }
             let currentlyVisible = collectionView.indexPathsForVisibleItems
             for indexPath in currentlyVisible {
@@ -47,7 +47,7 @@ extension NoraiScrollView {
                 let visibleArea = intersection.width * intersection.height
                 let visibleRatio = visibleArea / totalArea
                 
-                if visibleArea >= 0.5 {
+                if visibleRatio >= 0.5 {
                     if !visibleIndexPaths.contains(indexPath) {
                         visibleIndexPaths.insert(indexPath)
                         // TODO: Trigger cell is visible
