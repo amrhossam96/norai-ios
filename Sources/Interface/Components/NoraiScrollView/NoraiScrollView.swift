@@ -12,7 +12,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     @Binding var data: Data
     let content: (Data.Element) -> Content
     
-    public init(data: Binding<Data>, content: @escaping (Data.Element) -> Content) {
+    public init(data: Binding<Data>, @ViewBuilder content: @escaping (Data.Element) -> Content) {
         self._data = data
         self.content = content
     }
@@ -36,24 +36,12 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
-        // Update the coordinator's data
-        context.coordinator.updateData(data)
+        // Update the coordinator with the latest content closure and data
+        context.coordinator.updateData(data, content: content)
         
-        // Perform batch updates to maintain scroll position and animations
-        uiView.performBatchUpdates {
-            // This triggers a refresh of visible cells without losing scroll position
-        } completion: { _ in
-            // Ensure all visible cells are updated with current state
-            DispatchQueue.main.async {
-                for indexPath in uiView.indexPathsForVisibleItems {
-                    if let cell = uiView.cellForItem(at: indexPath) as? NoraiHostingCell<Content>,
-                       indexPath.item < data.count {
-                        let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
-                        cell.host(rootView: content(item))
-                    }
-                }
-            }
-        }
+        // Always reload to ensure SwiftUI state changes are reflected
+        // This is similar to how ForEach rebuilds when state changes
+        uiView.reloadData()
     }
     
     public func makeCoordinator() -> Coordinator {

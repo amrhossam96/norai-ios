@@ -11,7 +11,7 @@ public extension NoraiScrollView {
     class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         
         private var data: Data
-        private let content: (Data.Element) -> Content
+        private var content: (Data.Element) -> Content
         var visibleIndexPaths: Set<IndexPath> = []
         
         init(data: Data, content: @escaping (Data.Element) -> Content) {
@@ -19,8 +19,9 @@ public extension NoraiScrollView {
             self.content = content
         }
         
-        func updateData(_ newData: Data) {
+        func updateData(_ newData: Data, content: @escaping (Data.Element) -> Content) {
             self.data = newData
+            self.content = content // Update to the latest content closure with current state
         }
         
         public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -37,6 +38,7 @@ public extension NoraiScrollView {
             }
             
             let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
+            // Use the latest content closure which captures current SwiftUI state
             cell.host(rootView: content(item))
             return cell
         }
