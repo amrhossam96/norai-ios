@@ -9,11 +9,11 @@ import UIKit
 import SwiftUI
 
 public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepresentable where Data.Element: Identifiable {
-    let data: Data
+    @Binding var data: Data
     let content: (Data.Element) -> Content
     
-    public init(data: Data, content: @escaping (Data.Element) -> Content) {
-        self.data = data
+    public init(data: Binding<Data>, content: @escaping (Data.Element) -> Content) {
+        self._data = data
         self.content = content
     }
     
