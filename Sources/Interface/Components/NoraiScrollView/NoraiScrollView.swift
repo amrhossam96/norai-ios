@@ -12,6 +12,11 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     let data: Data
     let content: (Data.Element) -> Content
     
+    public init(data: Data, content: @escaping (Data.Element) -> Content) {
+        self.data = data
+        self.content = content
+    }
+    
     public func makeUIView(context: Context) -> UICollectionView {
         let layout = UICollectionViewCompositionalLayout { _, _ in
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
