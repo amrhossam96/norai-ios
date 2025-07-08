@@ -9,11 +9,11 @@ import UIKit
 import SwiftUI
 
 public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepresentable where Data.Element: Identifiable {
-    @Binding var data: Data
+    let data: Data
     let content: (Data.Element) -> Content
     
-    public init(data: Binding<Data>, @ViewBuilder content: @escaping (Data.Element) -> Content) {
-        self._data = data
+    public init(data: Data, content: @escaping (Data.Element) -> Content) {
+        self.data = data
         self.content = content
     }
     
@@ -36,12 +36,9 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
-        // Update the coordinator with the latest content closure and data
-        context.coordinator.updateData(data, content: content)
-        
-        // Always reload to ensure SwiftUI state changes are reflected
-        // This is similar to how ForEach rebuilds when state changes
-        uiView.reloadData()
+        context.coordinator.data = data
+        uiView.reloadSections(IndexSet(integer: .zero))
+    
     }
     
     public func makeCoordinator() -> Coordinator {

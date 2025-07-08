@@ -10,18 +10,13 @@ import SwiftUI
 public extension NoraiScrollView {
     class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         
-        private var data: Data
-        private var content: (Data.Element) -> Content
+        var data: Data
+        let content: (Data.Element) -> Content
         var visibleIndexPaths: Set<IndexPath> = []
         
         init(data: Data, content: @escaping (Data.Element) -> Content) {
             self.data = data
             self.content = content
-        }
-        
-        func updateData(_ newData: Data, content: @escaping (Data.Element) -> Content) {
-            self.data = newData
-            self.content = content // Update to the latest content closure with current state
         }
         
         public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -32,13 +27,7 @@ public extension NoraiScrollView {
             guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? NoraiHostingCell<Content> else {
                 return UICollectionViewCell()
             }
-
-            guard indexPath.item < data.count else {
-                return cell
-            }
-            
             let item = data[data.index(data.startIndex, offsetBy: indexPath.item)]
-            // Use the latest content closure which captures current SwiftUI state
             cell.host(rootView: content(item))
             return cell
         }
@@ -50,7 +39,6 @@ public extension NoraiScrollView {
         public func scrollViewDidScroll(_ scrollView: UIScrollView) {
             guard let collectionView = scrollView as? UICollectionView else { return }
             let currentlyVisible = collectionView.indexPathsForVisibleItems
-            
             for indexPath in currentlyVisible {
                 guard let cellFrame = collectionView.layoutAttributesForItem(at: indexPath)?.frame else { continue }
                 let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
@@ -64,12 +52,14 @@ public extension NoraiScrollView {
                         visibleIndexPaths.insert(indexPath)
                         // TODO: Trigger cell is visible
                         print("✅ Cell at \(indexPath) is visible (tracking started)")
+
                     }
                 } else {
                     if visibleIndexPaths.contains(indexPath) {
                         visibleIndexPaths.remove(indexPath)
                         // TODO: Trigger cell is invisible
                         print("⛔️ Cell at \(indexPath) is no longer visible (tracking stopped)")
+
                     }
                 }
             }
