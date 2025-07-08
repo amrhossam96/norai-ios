@@ -36,8 +36,15 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     }
     
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
-        context.coordinator.updateData(data)
-        uiView.reloadData()
+        // Use efficient cell updating instead of reloadData()
+        context.coordinator.updateData(data, collectionView: uiView)
+        
+        // Only reload if the count changed significantly (items added/removed)
+        // This prevents unnecessary full reloads for state changes
+        let currentCount = uiView.numberOfItems(inSection: 0)
+        if currentCount != data.count {
+            uiView.reloadData()
+        }
     }
     
     public func makeCoordinator() -> Coordinator {
