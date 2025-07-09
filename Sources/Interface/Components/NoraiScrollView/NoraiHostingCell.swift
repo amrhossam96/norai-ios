@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+#if os(iOS)
 class NoraiHostingCell<Content: View>: UICollectionViewCell {
     private var hostingController: UIHostingController<Content>?
     
@@ -38,3 +38,4 @@ class NoraiHostingCell<Content: View>: UICollectionViewCell {
         return controller.sizeThatFits(in: targetSize)
     }
 }
+#endif

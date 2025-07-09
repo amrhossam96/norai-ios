@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+#if os(iOS)
 public extension NoraiScrollView {
     class Coordinator: NSObject, UICollectionViewDataSource, UICollectionViewDelegate {
         
@@ -74,3 +74,4 @@ public extension NoraiScrollView {
         }
     }
 }
+#endif

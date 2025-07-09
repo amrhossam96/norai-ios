@@ -5,6 +5,7 @@
 //  Created by Amr on 08/07/2025.
 //
 
+#if os(iOS)
 import UIKit
 import SwiftUI
 
@@ -45,3 +46,4 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
         Coordinator(data: data, content: content)
     }
 }
+#endif
