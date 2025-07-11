@@ -9,12 +9,17 @@
 import UIKit
 import SwiftUI
 
-public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIViewRepresentable where Data.Element: Identifiable {
+public struct NoraiScrollView<
+    Data: RandomAccessCollection,
+    Dependency: Equatable,
+    Content: View>: UIViewRepresentable where Data.Element: Identifiable {
     let data: Data
+    let dependencies: Dependency
     let content: (Data.Element) -> Content
     
-    public init(data: Data, content: @escaping (Data.Element) -> Content) {
+    public init(data: Data, dependencies: Dependency, content: @escaping (Data.Element) -> Content) {
         self.data = data
+        self.dependencies = dependencies
         self.content = content
     }
     
@@ -39,7 +44,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection, Content: View>: UIVi
     public func updateUIView(_ uiView: UICollectionView, context: Context) {
         context.coordinator.data = data
         uiView.reloadSections(IndexSet(integer: .zero))
-    
     }
     
     public func makeCoordinator() -> Coordinator {
