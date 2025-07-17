@@ -36,8 +36,8 @@ public actor NoraiEventsMonitor {
             await logger.log("📅 Starting periodic clock...")
             while isTimerOn {
                 try await clock.sleep(for: .seconds(1))
-                let bufferCount = await buffer.shouldFlush() ? "FULL" : "\(await getBufferCount())"
-                await logger.log("⏰ Tick! Buffer: \(bufferCount)")
+                let bufferStatus = await buffer.shouldFlush() ? "FULL" : "NOT_FULL"
+                await logger.log("⏰ Tick! Buffer: \(bufferStatus)")
                 
                 if await shouldFlush() {
                     lastFlushingTime = .now
@@ -50,20 +50,16 @@ public actor NoraiEventsMonitor {
         }
     }
     
-    private func getBufferCount() async -> Int {
-        // Helper to get buffer count for debugging
-        let events = await buffer.drain()
-        // Put them back
-        for event in events {
-            await buffer.add(event)
-        }
-        return events.count
-    }
-    
     private func shouldFlush() async -> Bool {
         let timeSinceLastFlush = shouldFlushBasedOnTime()
         let bufferIsFull = await shouldFlushBasedOnBufferSize()
-        return timeSinceLastFlush || bufferIsFull
+        let shouldFlushResult = timeSinceLastFlush || bufferIsFull
+        
+        if shouldFlushResult {
+            await logger.log("🔍 Flush triggered - Time: \(timeSinceLastFlush), Buffer full: \(bufferIsFull)")
+        }
+        
+        return shouldFlushResult
     }
     
     private func shouldFlushBasedOnTime() -> Bool {

@@ -47,15 +47,17 @@ public final actor NoraiEngine {
             for await _ in stream {
                 await self.logger.log("📨 Received flush signal from monitor!")
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
-                await self.logger.log("📤 Draining \(bufferedEvents.count) events from buffer")
+                let wasEmpty = bufferedEvents.isEmpty
+                await self.logger.log("📤 Drained buffer: \(wasEmpty ? "was empty" : "had \(bufferedEvents.count) events")")
                 
                 if !bufferedEvents.isEmpty {
                     do {
                         try await self.dispatcher.dispatch(events: bufferedEvents)
                         await self.logger.log("✅ Successfully dispatched \(bufferedEvents.count) events")
                     } catch {
-                        await self.logger.log("❌ Failed to dispatch events: \(error)")
-                        throw NoraiEngineErrors.failedToDispatchEvents
+                        await self.logger.log("❌ Failed to dispatch events: \(error) - Stream continues")
+                        // Don't throw here - this would break the entire stream loop!
+                        // TODO: Cache events for retry when network is available
                     }
                 } else {
                     await self.logger.log("⚠️ No events to dispatch")
@@ -71,6 +73,7 @@ extension NoraiEngine: NoraiEngineProtocol {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
         await logger.log(enrichedEvent, level: config.logLevel)
         await buffer.add(enrichedEvent)
+        await logger.log("📥 Event added to buffer: \(enrichedEvent.type.rawValue)")
     }
     
     public func identify(user context: NoraiUserContext) async {
