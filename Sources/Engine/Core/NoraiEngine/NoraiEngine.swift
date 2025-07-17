@@ -44,7 +44,6 @@ public final actor NoraiEngine {
         await logger.log("🎧 Starting to listen to monitor stream...")
         let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
-            await self.logger.log("📡 Stream listener task started")
             for await _ in stream {
                 await self.logger.log("📨 Received flush signal from monitor!")
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
