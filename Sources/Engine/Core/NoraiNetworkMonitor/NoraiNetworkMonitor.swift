@@ -22,12 +22,17 @@ public actor NoraiNetworkMonitor {
     }
     
     private func handlePathUpdate(_ path: NWPath) {
+        let wasConnected = self.isConnected
         self.isConnected = path.status == .satisfied
+        
+        if wasConnected != self.isConnected {
+            print("📶 Network status changed: \(self.isConnected ? "Connected" : "Disconnected") (\(path.status))")
+        }
     }
 }
 
 extension NoraiNetworkMonitor: NoraiNetworkMonitorProtocol {
-    public func startMonitoring() {
+    public func startMonitoring() async {
         monitor.pathUpdateHandler = { [weak self] path in
             guard let self else { return }
             Task { [weak self] in
@@ -35,9 +40,16 @@ extension NoraiNetworkMonitor: NoraiNetworkMonitorProtocol {
                 await handlePathUpdate(path)
             }
         }
+        monitor.start(queue: queue)
+        
+        if let currentPath = monitor.currentPath {
+            await handlePathUpdate(currentPath)
+        }
+        
+        print("📶 Network monitor started - Initial status: \(isConnected)")
     }
     
-    public func isNetworkAvailable() -> Bool {
+    public func isNetworkAvailable() async -> Bool {
         return isConnected
     }
 }

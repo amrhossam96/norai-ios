@@ -35,9 +35,10 @@ public final class Norai: @unchecked Sendable {
             clock: ContinuousClock(),
             logger: logger
         )
-        
-        // Network components
+
         let networkMonitor = NoraiNetworkMonitor()
+        await networkMonitor.startMonitoring()
+        
         let middlewareExecutor = MiddlewareExecutor(middlewares: [])
         let networkClient = NoraiNetworkClient(
             urlSession: URLSession.shared,

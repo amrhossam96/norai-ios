@@ -29,7 +29,11 @@ actor NoraiEventsDispatcher {
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
     func dispatch(events: [NoraiEvent]) async throws {
-        guard await networkMonitor.isNetworkAvailable() else {
+        let networkAvailable = await networkMonitor.isNetworkAvailable()
+        print("🌐 Network status: \(networkAvailable ? "Available" : "Unavailable")")
+        
+        guard networkAvailable else {
+            print("❌ Network unavailable - cannot dispatch events")
             // TODO: Cache events
             throw NoraiEventsDispatcherErrors.networkUnavailable
         }
