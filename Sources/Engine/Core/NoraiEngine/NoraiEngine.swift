@@ -41,16 +41,28 @@ public final actor NoraiEngine {
     }
     
     private func startListeningToMonitorStream() async throws {
+        await logger.log("🎧 Starting to listen to monitor stream...")
         let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
+            await self.logger.log("📡 Stream listener task started")
             for await _ in stream {
+                await self.logger.log("📨 Received flush signal from monitor!")
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
-                do {
-                    try await self.dispatcher.dispatch(events: bufferedEvents)
-                } catch {
-                    throw NoraiEngineErrors.failedToDispatchEvents
+                await self.logger.log("📤 Draining \(bufferedEvents.count) events from buffer")
+                
+                if !bufferedEvents.isEmpty {
+                    do {
+                        try await self.dispatcher.dispatch(events: bufferedEvents)
+                        await self.logger.log("✅ Successfully dispatched \(bufferedEvents.count) events")
+                    } catch {
+                        await self.logger.log("❌ Failed to dispatch events: \(error)")
+                        throw NoraiEngineErrors.failedToDispatchEvents
+                    }
+                } else {
+                    await self.logger.log("⚠️ No events to dispatch")
                 }
             }
+            await self.logger.log("🔚 Stream listener ended")
         }
     }
 }

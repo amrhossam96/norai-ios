@@ -33,16 +33,31 @@ public actor NoraiEventsMonitor {
     
     private func startPeriodicClock() {
         timerTask = Task {
+            await logger.log("📅 Starting periodic clock...")
             while isTimerOn {
                 try await clock.sleep(for: .seconds(1))
-                await logger.log("Tick!")
+                let bufferCount = await buffer.shouldFlush() ? "FULL" : "\(await getBufferCount())"
+                await logger.log("⏰ Tick! Buffer: \(bufferCount)")
+                
                 if await shouldFlush() {
                     lastFlushingTime = .now
+                    await logger.log("🚀 Flushing events! Yielding to stream...")
                     streamContinuation?.yield()
-                    await logger.log(lastFlushingTime?.description ?? "")
+                    await logger.log("✅ Stream yielded at \(lastFlushingTime?.description ?? "")")
                 }
             }
+            await logger.log("⏹️ Periodic clock stopped")
         }
+    }
+    
+    private func getBufferCount() async -> Int {
+        // Helper to get buffer count for debugging
+        let events = await buffer.drain()
+        // Put them back
+        for event in events {
+            await buffer.add(event)
+        }
+        return events.count
     }
     
     private func shouldFlush() async -> Bool {
@@ -56,7 +71,7 @@ public actor NoraiEventsMonitor {
             return true
         }
         
-        return Date().timeIntervalSince(lastFlushingTime) >= 20.0
+        return Date().timeIntervalSince(lastFlushingTime) >= 5.0  // Reduced from 20s to 5s for testing
     }
     
     private func shouldFlushBasedOnBufferSize() async -> Bool {
@@ -64,7 +79,7 @@ public actor NoraiEventsMonitor {
     }
     
     private func setContinution(_ continuation: AsyncStream<Void>.Continuation) {
-        
+        self.streamContinuation = continuation
     }
 }
 
@@ -89,6 +104,7 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         return AsyncStream<Void> { continuation in
             Task {
                 await self.setContinution(continuation)
+                await self.logger.log("🔄 Stream continuation set up successfully")
             }
         }
     }
