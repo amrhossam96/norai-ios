@@ -2,60 +2,112 @@
 //  Norai.swift
 //  Norai
 //
-//  Created by Amr on 05/07/2025.
+//  Created by Amr on 17/07/2025.
 //
 
 import Foundation
 
-public protocol NoraiProtocol {
-    func configure(with configuration: NoraiConfiguration) async throws
-}
-
-@MainActor
-public final class Norai {
-
-    //  MARK: - Private Properties
-
-    private var isConfigured: Bool = false
-    private var engine: NoraiEngine?
-
-    // MARK: - Singleton
-    public static let `default` = Norai()
-}
-
-extension Norai: NoraiProtocol {
-    public func configure(with configuration: NoraiConfiguration) async throws {
-        guard !isConfigured else {
-            throw NoraiError.alreadyConfigured
-        }
-        let engineState = NoraiEngineState()
-        let stateManager = NoraiEngineStateManager(state: engineState)
+public final class Norai: @unchecked Sendable {
+    public static let shared = Norai()
+    private var engine: NoraiEngineProtocol?
+    
+    private init() {}
+    
+    /// Initialize Norai with complete analytics pipeline
+    public func initialize(
+        apiKey: String,
+        environment: NoraiEnvironment = .staging,
+        logLevel: LogLevel = .debug
+    ) async throws {
+        // Configuration
+        let config = NoraiConfiguration(
+            apiKey: apiKey,
+            environment: environment,
+            logLevel: logLevel
+        )
+        
+        // Core components
+        let logger = NoraiLogger(currentLevel: logLevel)
+        let stateManager = NoraiEngineStateManager(state: NoraiEngineState())
         let buffer = NoraiBuffer()
-        let clock = ContinuousClock()
-        let cache = NoraiCachingLayer()
+        let eventsMonitor = NoraiEventsMonitor(
+            buffer: buffer,
+            clock: ContinuousClock(),
+            logger: logger
+        )
+        
+        // Network components
         let networkMonitor = NoraiNetworkMonitor()
         let middlewareExecutor = MiddlewareExecutor(middlewares: [])
-        let client = NoraiNetworkClient(urlSession: URLSession.shared,
-                                        middlewareExecutor: middlewareExecutor)
-        let dispatcher = NoraiEventsDispatcher(client: client,
-                                               cache: cache,
-                                               networkMonitor: networkMonitor)
-        let logger = NoraiLogger(currentLevel: configuration.logLevel)
-        let eventsMonitor = NoraiEventsMonitor(buffer: buffer,
-                                               clock: clock,
-                                               logger: logger)
-        engine = NoraiEngine(config: configuration,
-                             logger: NoraiLogger(currentLevel: configuration.logLevel),
-                             stateManager: stateManager,
-                             enrichmentPipeline: NoraiEnrichmentPipeline(stateManager: stateManager,
-                                                                         enrichers: []),
-                             eventsMonitor: eventsMonitor,
-                             dispatcher: dispatcher)
-        isConfigured = true
-        do {
-            try await engine?.start()
-        } catch {
-            print(error)
+        let networkClient = NoraiNetworkClient(
+            urlSession: URLSession.shared,
+            middlewareExecutor: middlewareExecutor
+        )
+        let cache = NoraiCachingLayer()
+        let dispatcher = NoraiEventsDispatcher(
+            client: networkClient,
+            cache: cache,
+            networkMonitor: networkMonitor
+        )
+        
+        // 🎯 CREATE ENRICHMENT PIPELINE WITH ALL ENRICHERS
+        let enrichers: [any NoraiEventEnricherProtocol] = [
+            UserContextEnricher(),
+            DeviceMetadataEnricher(),
+            ScreenContextEnricher(),
+            NetworkContextEnricher(networkMonitor: networkMonitor)
+        ]
+        
+        let enrichmentPipeline = NoraiEnrichmentPipeline(
+            stateManager: stateManager,
+            enrichers: enrichers
+        )
+        
+        // Initialize engine
+        self.engine = NoraiEngine(
+            config: config,
+            logger: logger,
+            stateManager: stateManager,
+            enrichmentPipeline: enrichmentPipeline,
+            eventsMonitor: eventsMonitor,
+            dispatcher: dispatcher
+        )
+        
+        // Start the engine
+        try await engine?.start()
+    }
+    
+    /// Get the initialized engine for use in components
+    public func getEngine() -> NoraiEngineProtocol? {
+        return engine
+    }
+    
+    /// Set current screen context
+    public func setCurrentScreen(_ screenName: String) async {
+        await engine?.track(event: NoraiEvent(
+            type: .screenViewed,
+            context: EventContext(screen: screenName),
+            tags: ["navigation", "screen_view"]
+        ))
+    }
+    
+    /// Identify a user
+    public func identify(user: NoraiUserContext) async {
+        await engine?.identify(user: user)
+    }
+}
+
+// MARK: - SwiftUI Extensions
+
+import SwiftUI
+
+extension View {
+    /// Track the current screen for analytics
+    public func noraiScreen(_ screenName: String) -> some View {
+        self.onAppear {
+            Task {
+                await Norai.shared.setCurrentScreen(screenName)
+            }
         }
     }
 }
