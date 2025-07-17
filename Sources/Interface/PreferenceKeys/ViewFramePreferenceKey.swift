@@ -12,4 +12,4 @@ struct ViewFramePreferenceKey: @preconcurrency PreferenceKey {
     static func reduce(value: inout [ViewFrame], nextValue: () -> [ViewFrame]) {
         value.append(contentsOf: nextValue())
     }
-}
+} 

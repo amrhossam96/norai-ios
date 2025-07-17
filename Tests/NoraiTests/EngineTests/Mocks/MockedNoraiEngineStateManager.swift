@@ -18,6 +18,7 @@ actor MockedNoraiEngineStateManager: NoraiEngineStateManagerProtocol {
     var getStateCalled: Bool = false
     var isUpdateCalled: Bool = false
     var capturedUserContext: NoraiUserContext?
+    var lastUserContext: NoraiUserContext?
 
     func startEngine() async -> Bool {
         startEngineMessages.append(.startEngine)
@@ -31,6 +32,7 @@ actor MockedNoraiEngineStateManager: NoraiEngineStateManagerProtocol {
     
     func update(user context: NoraiUserContext) async {
         capturedUserContext = context
+        lastUserContext = context
         isUpdateCalled = true
     }
 }

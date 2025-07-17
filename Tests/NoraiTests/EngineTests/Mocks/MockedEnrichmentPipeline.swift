@@ -10,9 +10,28 @@ import Norai
 
 actor MockedEnrichmentPipeline: NoraiEnrichmentPipelineProtocol {
     var isEnrichCalled: Bool = false
+    var lastEnrichedEvent: NoraiEvent?
+    var enrichedEvent: NoraiEvent?
+    var shouldFail: Bool = false
 
     func enrich(event: NoraiEvent) async -> NoraiEvent {
         isEnrichCalled = true
-        return event
+        lastEnrichedEvent = event
+        
+        if shouldFail {
+            // In reality, enrichers might fail but we'd handle gracefully
+            // For testing, we'll still return the event but mark that failure was simulated
+            return event
+        }
+        
+        return enrichedEvent ?? event
+    }
+    
+    func setEnrichedEvent(_ event: NoraiEvent) {
+        enrichedEvent = event
+    }
+    
+    func setShouldFail(_ fail: Bool) {
+        shouldFail = fail
     }
 }
