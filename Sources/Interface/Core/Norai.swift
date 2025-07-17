@@ -53,6 +53,7 @@ public final class Norai: @unchecked Sendable {
         
         // 🎯 CREATE ENRICHMENT PIPELINE WITH ALL ENRICHERS
         let enrichers: [any NoraiEventEnricherProtocol] = [
+            TimestampEnricher(), // ⏰ Add timestamp when event is fresh
             UserContextEnricher(),
             DeviceMetadataEnricher(),
             ScreenContextEnricher(),
@@ -64,12 +65,21 @@ public final class Norai: @unchecked Sendable {
             enrichers: enrichers
         )
         
+        // 🎯 CREATE PROCESSING PIPELINE WITH ALL PROCESSORS
+        let processors: [any NoraiEventProcessorProtocol] = [
+            ViewDurationProcessor(),
+            EventFilterProcessor()
+        ]
+        
+        let processingPipeline = NoraiProcessingPipeline(processors: processors)
+        
         // Initialize engine
         self.engine = NoraiEngine(
             config: config,
             logger: logger,
             stateManager: stateManager,
             enrichmentPipeline: enrichmentPipeline,
+            processingPipeline: processingPipeline,
             eventsMonitor: eventsMonitor,
             dispatcher: dispatcher
         )

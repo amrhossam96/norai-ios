@@ -18,6 +18,7 @@ public final actor NoraiEngine {
     
     private let stateManager: any NoraiEngineStateManagerProtocol
     private let enrichmentPipeline: any NoraiEnrichmentPipelineProtocol
+    private let processingPipeline: any NoraiProcessingPipelineProtocol
     
     private let eventsMonitor: any NoraiEventsMonitorProtocol
     private let buffer: any NoraiBufferProtocol
@@ -28,6 +29,7 @@ public final actor NoraiEngine {
         logger: any NoraiLoggerProtocol,
         stateManager: any NoraiEngineStateManagerProtocol,
         enrichmentPipeline: any NoraiEnrichmentPipelineProtocol,
+        processingPipeline: any NoraiProcessingPipelineProtocol,
         eventsMonitor: any NoraiEventsMonitorProtocol,
         dispatcher: any NoraiEventsDispatcherProtocol
     ) {
@@ -35,6 +37,7 @@ public final actor NoraiEngine {
         self.logger = logger
         self.stateManager = stateManager
         self.enrichmentPipeline = enrichmentPipeline
+        self.processingPipeline = processingPipeline
         self.eventsMonitor = eventsMonitor
         self.buffer = eventsMonitor.buffer
         self.dispatcher = dispatcher
@@ -51,13 +54,25 @@ public final actor NoraiEngine {
                 await self.logger.log("📤 Drained buffer: \(wasEmpty ? "was empty" : "had \(bufferedEvents.count) events")")
                 
                 if !bufferedEvents.isEmpty {
-                    do {
-                        try await self.dispatcher.dispatch(events: bufferedEvents)
-                        await self.logger.log("✅ Successfully dispatched \(bufferedEvents.count) events")
-                    } catch {
-                        await self.logger.log("❌ Failed to dispatch events: \(error) - Stream continues")
-                        // Don't throw here - this would break the entire stream loop!
-                        // TODO: Cache events for retry when network is available
+                    // Process events through the processing pipeline
+                    let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
+                    let processedCount = bufferedEvents.count - processedEvents.count
+                    
+                    if processedCount > 0 {
+                        await self.logger.log("🔄 Processed \(bufferedEvents.count) events → \(processedEvents.count) events")
+                    }
+                    
+                    if !processedEvents.isEmpty {
+                        do {
+                            try await self.dispatcher.dispatch(events: processedEvents)
+                            await self.logger.log("✅ Successfully dispatched \(processedEvents.count) processed events")
+                        } catch {
+                            await self.logger.log("❌ Failed to dispatch events: \(error) - Stream continues")
+                            // Don't throw here - this would break the entire stream loop!
+                            // TODO: Cache events for retry when network is available
+                        }
+                    } else {
+                        await self.logger.log("⚠️ All events were processed out - nothing to dispatch")
                     }
                 } else {
                     await self.logger.log("⚠️ No events to dispatch")
@@ -71,6 +86,7 @@ public final actor NoraiEngine {
 extension NoraiEngine: NoraiEngineProtocol {
     public func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
+        
         await logger.log(enrichedEvent, level: config.logLevel)
         await buffer.add(enrichedEvent)
         await logger.log("📥 Event added to buffer: \(enrichedEvent.type.rawValue)")

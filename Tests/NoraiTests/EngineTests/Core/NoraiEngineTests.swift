@@ -14,6 +14,7 @@ struct NoraiEngineTests {
     private let mockedLogger: MockedNoraiLogger
     private let mockedStateManager: MockedNoraiEngineStateManager
     private let mockedEnrichmentPipeline: MockedEnrichmentPipeline
+    private let mockedProcessingPipeline: MockedProcessingPipeline
     private let mockedEventsMonitor: MockedEventsMonitor
     private let mockedBuffer: MockedBuffer
     private let mockedDispatcher: MockedDispatcher
@@ -23,6 +24,7 @@ struct NoraiEngineTests {
         self.mockedLogger = MockedNoraiLogger()
         self.mockedStateManager = MockedNoraiEngineStateManager()
         self.mockedEnrichmentPipeline = MockedEnrichmentPipeline()
+        self.mockedProcessingPipeline = MockedProcessingPipeline()
         self.mockedBuffer = MockedBuffer()
         self.mockedEventsMonitor = MockedEventsMonitor(buffer: self.mockedBuffer)
         self.mockedDispatcher = MockedDispatcher()
@@ -99,6 +101,7 @@ extension NoraiEngineTests {
                     logger: mockedLogger,
                     stateManager: mockedStateManager,
                     enrichmentPipeline: mockedEnrichmentPipeline,
+                    processingPipeline: mockedProcessingPipeline,
                     eventsMonitor: mockedEventsMonitor,
                     dispatcher: mockedDispatcher)
     }
