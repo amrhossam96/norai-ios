@@ -68,7 +68,7 @@ enum MockEndPoint: NoraiEndpoint {
         switch self {
         case .invalidURLEndPoint:
                 return URL(string: "http://wwwwwwwwwww  ")
-        default: return URL(string: "http://127.0.0.1:3045")
+        default: return URL(string: "https://api.example.com")
         }
     }
 }

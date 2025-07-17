@@ -18,6 +18,6 @@ public protocol NoraiEndpoint {
 
 public extension NoraiEndpoint {
     var baseURL: URL? {
-        return URL(string: "http://127.0.0.1:3045")
+        return URL(string: "http://localhost:3000")
     }
 }

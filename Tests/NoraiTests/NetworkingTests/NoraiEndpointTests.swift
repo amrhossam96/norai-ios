@@ -24,7 +24,7 @@ struct NoraiEndpointTests {
         let baseURL: URL? = endpoint.baseURL
         
         #expect(baseURL != nil)
-        #expect(baseURL?.absoluteString == "http://127.0.0.1:3045")
+        #expect(baseURL?.absoluteString == "http://localhost:3000")
     }
     
     @Test func pathForEndpoint() {
