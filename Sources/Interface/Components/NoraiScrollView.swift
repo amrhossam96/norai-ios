@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NoraiScrollView<Data: RandomAccessCollection,
+public struct NoraiScrollView<Data: RandomAccessCollection,
                        ID: Hashable, Content: View>: View where Data.Element: Identifiable,
                                                                 Data.Element.ID == ID {
 
@@ -34,8 +34,8 @@ struct NoraiScrollView<Data: RandomAccessCollection,
     private let minimumScrollDelta: CGFloat = 2.0
     private let bufferZone: CGFloat = 100
 
-    init(
-        _ data: Data, 
+    public init(
+        _ data: Data,
         screenName: String = "UnknownScreen",
         @ViewBuilder content: @escaping (Data.Element) -> Content
     ) {
@@ -44,7 +44,7 @@ struct NoraiScrollView<Data: RandomAccessCollection,
         self.content = content
     }
 
-    var body: some View {
+    public var body: some View {
         GeometryReader { scrollProxy in
             ScrollView {
                 VStack(spacing: 0) {
