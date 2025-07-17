@@ -33,6 +33,22 @@ extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
             // TODO: Cache events
             throw NoraiEventsDispatcherErrors.networkUnavailable
         }
+        
+        // 🔍 Debug: Print encoded events
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
+            let jsonData = try encoder.encode(events)
+            let jsonString = String(data: jsonData, encoding: .utf8) ?? "Failed to convert to string"
+            print("📡 DISPATCHING EVENTS:")
+            print(String(repeating: "=", count: 50))
+            print(jsonString)
+            print(String(repeating: "=", count: 50))
+        } catch {
+            print("❌ Failed to encode events for debugging: \(error)")
+        }
+        
         let request: NoraiBatchEventsRequest = NoraiBatchEventsRequest(events: events)
         let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch(request)
         let _: NoraiBatchEventsResponse = try await client.execute(endpoint)
