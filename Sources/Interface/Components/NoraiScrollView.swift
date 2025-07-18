@@ -231,7 +231,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         // Create rich event context
         var context: [String: String] = [:]
         context["screen"] = screenName
-        context["component"] = componentName ?? ""
+        context["component"] = componentName
         context["itemId"] = "\(itemId)"
         context["visibilityRatio"] = "\(Double(ratio))"
         if let duration = viewDuration {
@@ -247,8 +247,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             context: context,
             tags: ["impression", "scroll_view", "visibility"]
         )
-        
-        // Send to engine asynchronously using the singleton interface
+
         Task {
             await Norai.shared.track(event: event)
         }
