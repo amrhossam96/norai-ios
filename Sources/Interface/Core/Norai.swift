@@ -46,9 +46,7 @@ public final class Norai: @unchecked Sendable {
         )
         let cache = NoraiCachingLayer()
         let dispatcher = NoraiEventsDispatcher(
-            client: networkClient,
-            cache: cache,
-            networkMonitor: networkMonitor
+            client: networkClient
         )
         
         // 🎯 CREATE ENRICHMENT PIPELINE WITH ALL ENRICHERS
@@ -81,7 +79,8 @@ public final class Norai: @unchecked Sendable {
             enrichmentPipeline: enrichmentPipeline,
             processingPipeline: processingPipeline,
             eventsMonitor: eventsMonitor,
-            dispatcher: dispatcher
+            dispatcher: dispatcher,
+            cache: cache
         )
         
         // Start the engine

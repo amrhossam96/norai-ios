@@ -23,6 +23,7 @@ public final actor NoraiEngine {
     private let eventsMonitor: any NoraiEventsMonitorProtocol
     private let buffer: any NoraiBufferProtocol
     private let dispatcher: any NoraiEventsDispatcherProtocol
+    private let cache: any NoraiCachingLayerProtocol
 
     public init(
         config: NoraiConfiguration,
@@ -31,7 +32,8 @@ public final actor NoraiEngine {
         enrichmentPipeline: any NoraiEnrichmentPipelineProtocol,
         processingPipeline: any NoraiProcessingPipelineProtocol,
         eventsMonitor: any NoraiEventsMonitorProtocol,
-        dispatcher: any NoraiEventsDispatcherProtocol
+        dispatcher: any NoraiEventsDispatcherProtocol,
+        cache: any NoraiCachingLayerProtocol
     ) {
         self.config = config
         self.logger = logger
@@ -41,44 +43,54 @@ public final actor NoraiEngine {
         self.eventsMonitor = eventsMonitor
         self.buffer = eventsMonitor.buffer
         self.dispatcher = dispatcher
+        self.cache = cache
     }
     
     private func startListeningToMonitorStream() async throws {
-        await logger.log("🎧 Starting to listen to monitor stream...")
         let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
             for await _ in stream {
-                await self.logger.log("📨 Received flush signal from monitor!")
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
-                let wasEmpty = bufferedEvents.isEmpty
-                await self.logger.log("📤 Drained buffer: \(wasEmpty ? "was empty" : "had \(bufferedEvents.count) events")")
+                guard !bufferedEvents.isEmpty else { return }
                 
-                if !bufferedEvents.isEmpty {
-                    // Process events through the processing pipeline
-                    let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
-                    let processedCount = bufferedEvents.count - processedEvents.count
-                    
-                    if processedCount > 0 {
-                        await self.logger.log("🔄 Processed \(bufferedEvents.count) events → \(processedEvents.count) events")
-                    }
-                    
-                    if !processedEvents.isEmpty {
-                        do {
-                            try await self.dispatcher.dispatch(events: processedEvents)
-                            await self.logger.log("✅ Successfully dispatched \(processedEvents.count) processed events")
-                        } catch {
-                            await self.logger.log("❌ Failed to dispatch events: \(error) - Stream continues")
-                            // Don't throw here - this would break the entire stream loop!
-                            // TODO: Cache events for retry when network is available
-                        }
-                    } else {
-                        await self.logger.log("⚠️ All events were processed out - nothing to dispatch")
-                    }
-                } else {
-                    await self.logger.log("⚠️ No events to dispatch")
-                }
+                let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
+                guard !processedEvents.isEmpty else  { return }
+                await self.dispatch(processedEvents)
             }
-            await self.logger.log("🔚 Stream listener ended")
+        }
+    }
+    
+    private func dispatch(_ events: [NoraiEvent]) async {
+        await sendCachedEventsIfAny()
+
+        do {
+            try await dispatcher.dispatch(events: events)
+        } catch {
+            do {
+                try await cache.save(events)
+                let cachedCount = await cache.getEventCount()
+                let cacheSize = await cache.getCacheSize()
+                await logger.log("💾 Dispatch failed - cached \(events.count) events. Total: \(cachedCount) events (\(cacheSize) bytes)")
+            } catch {
+                await logger.log("❌ Failed to cache events after dispatch failure: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Send cached events if any exist
+    private func sendCachedEventsIfAny() async {
+        do {
+            let cachedEvents = try await cache.getAll()
+            guard !cachedEvents.isEmpty else { return }
+            
+            await logger.log("📤 Found \(cachedEvents.count) cached events - attempting to send...")
+            
+            try await dispatcher.dispatch(events: cachedEvents)
+            try await cache.clear()
+            await logger.log("✅ Successfully sent and cleared \(cachedEvents.count) cached events")
+            
+        } catch {
+            await logger.log("⚠️ Failed to send cached events: \(error.localizedDescription)")
         }
     }
 }
@@ -86,10 +98,8 @@ public final actor NoraiEngine {
 extension NoraiEngine: NoraiEngineProtocol {
     public func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
-        
         await logger.log(enrichedEvent, level: config.logLevel)
         await buffer.add(enrichedEvent)
-        await logger.log("📥 Event added to buffer: \(enrichedEvent.type.rawValue)")
     }
     
     public func identify(user context: NoraiUserContext) async {

@@ -21,6 +21,7 @@ actor MockedNoraiLogger: NoraiLoggerProtocol {
     func log(_ event: NoraiEvent, level: LogLevel) {
         isLogCalled = true
         lastLogLevel = level
+        logMessages.append("Event added to buffer: \(event.type.rawValue)")
     }
     
     func log(_ error: any Error, level: LogLevel) {

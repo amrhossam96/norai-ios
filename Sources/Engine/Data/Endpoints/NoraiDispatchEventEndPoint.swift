@@ -33,7 +33,9 @@ enum NoraiDispatchEventEndPoint: NoraiEndpoint {
     
     var parameters: [URLQueryItem]? { nil }
     
-    var headers: [String : String]? { nil }
+    var headers: [String : String]? { 
+        ["Content-Type": "application/json"]
+    }
     
     var path: String {
         switch self {

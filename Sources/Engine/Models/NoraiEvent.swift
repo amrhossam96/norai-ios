@@ -8,8 +8,8 @@
 import Foundation
 
 public struct NoraiEvent: Codable, Sendable {
-    var id: UUID = UUID()
-    var type: EventType
+    public var id: UUID = UUID()
+    public var type: EventType
     var timestamp: Date?
     var sessionId: UUID?
     var userId: String?

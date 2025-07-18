@@ -7,36 +7,21 @@
 
 import Foundation
 
-enum NoraiEventsDispatcherErrors: Error {
-    case networkUnavailable
-}
+// No specific dispatcher errors needed - will throw network client errors directly
 
 actor NoraiEventsDispatcher {
     let client: any NoraiNetworkClientProtocol
-    let cache: any NoraiCachingLayerProtocol
-    var networkMonitor: any NoraiNetworkMonitorProtocol
     
     init(
-        client: any NoraiNetworkClientProtocol,
-        cache: any NoraiCachingLayerProtocol,
-        networkMonitor: any NoraiNetworkMonitorProtocol
+        client: any NoraiNetworkClientProtocol
     ) {
         self.client = client
-        self.cache = cache
-        self.networkMonitor = networkMonitor
     }
 }
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
     func dispatch(events: [NoraiEvent]) async throws {
-        let networkAvailable = await networkMonitor.isNetworkAvailable()
-        print("🌐 Network status: \(networkAvailable ? "Available" : "Unavailable")")
-        
-        guard networkAvailable else {
-            print("❌ Network unavailable - cannot dispatch events")
-            // TODO: Cache events
-            throw NoraiEventsDispatcherErrors.networkUnavailable
-        }
+        guard !events.isEmpty else { return }
         
         // 🔍 Debug: Print encoded events
         do {
@@ -45,7 +30,7 @@ extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
             encoder.dateEncodingStrategy = .iso8601
             let jsonData = try encoder.encode(events)
             let jsonString = String(data: jsonData, encoding: .utf8) ?? "Failed to convert to string"
-            print("📡 DISPATCHING EVENTS:")
+            print("📡 DISPATCHING \(events.count) EVENTS:")
             print(String(repeating: "=", count: 50))
             print(jsonString)
             print(String(repeating: "=", count: 50))
@@ -55,6 +40,8 @@ extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
         
         let request: NoraiBatchEventsRequest = NoraiBatchEventsRequest(events: events)
         let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch(request)
-        let _: NoraiBatchEventsResponse = try await client.execute(endpoint)
+        
+        let response: NoraiBatchEventsResponse = try await client.execute(endpoint)
+        print("✅ Successfully dispatched \(events.count) events - Server response: \(response.message)")
     }
 }

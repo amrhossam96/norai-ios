@@ -18,6 +18,7 @@ struct NoraiEngineTests {
     private let mockedEventsMonitor: MockedEventsMonitor
     private let mockedBuffer: MockedBuffer
     private let mockedDispatcher: MockedDispatcher
+    private let mockedCache: MockedCache
 
     init() {
         self.configuration = NoraiConfiguration(apiKey: "test-key", environment: .sandbox, logLevel: .debug)
@@ -28,6 +29,7 @@ struct NoraiEngineTests {
         self.mockedBuffer = MockedBuffer()
         self.mockedEventsMonitor = MockedEventsMonitor(buffer: self.mockedBuffer)
         self.mockedDispatcher = MockedDispatcher()
+        self.mockedCache = MockedCache()
     }
     
     // MARK: - Start Engine Tests
@@ -336,7 +338,8 @@ struct NoraiEngineTests {
             enrichmentPipeline: mockedEnrichmentPipeline,
             processingPipeline: mockedProcessingPipeline,
             eventsMonitor: mockedEventsMonitor,
-            dispatcher: mockedDispatcher
+            dispatcher: mockedDispatcher,
+            cache: mockedCache
         )
         
         await sut.track(event: anyEvent())
@@ -354,7 +357,8 @@ struct NoraiEngineTests {
                     enrichmentPipeline: mockedEnrichmentPipeline,
                     processingPipeline: mockedProcessingPipeline,
                     eventsMonitor: mockedEventsMonitor,
-                    dispatcher: mockedDispatcher)
+                    dispatcher: mockedDispatcher,
+                    cache: mockedCache)
     }
     
     func makeTimedSUT(eventsMonitor: TestEventsMonitor) -> NoraiEngine {
@@ -364,10 +368,51 @@ struct NoraiEngineTests {
                     enrichmentPipeline: mockedEnrichmentPipeline,
                     processingPipeline: mockedProcessingPipeline,
                     eventsMonitor: eventsMonitor,
-                    dispatcher: mockedDispatcher)
+                    dispatcher: mockedDispatcher,
+                    cache: mockedCache)
     }
     
     func anyEvent() -> NoraiEvent {
         NoraiEvent(type: EventType.allCases.randomElement()!)
+    }
+}
+
+// MARK: - MockedCache
+
+actor MockedCache: NoraiCachingLayerProtocol {
+    var savedEvents: [NoraiEvent] = []
+    var isSaveCalled: Bool = false
+    var isGetAllCalled: Bool = false
+    var isClearCalled: Bool = false
+    var shouldThrowOnSave: Bool = false
+    var shouldThrowOnGetAll: Bool = false
+    
+    func save(_ events: [NoraiEvent]) async throws {
+        isSaveCalled = true
+        if shouldThrowOnSave {
+            throw NSError(domain: "MockedCache", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mocked save error"])
+        }
+        savedEvents.append(contentsOf: events)
+    }
+    
+    func getAll() async throws -> [NoraiEvent] {
+        isGetAllCalled = true
+        if shouldThrowOnGetAll {
+            throw NSError(domain: "MockedCache", code: 2, userInfo: [NSLocalizedDescriptionKey: "Mocked getAll error"])
+        }
+        return savedEvents
+    }
+    
+    func clear() async throws {
+        isClearCalled = true
+        savedEvents.removeAll()
+    }
+    
+    func getEventCount() async -> Int {
+        return savedEvents.count
+    }
+    
+    func getCacheSize() async -> Int {
+        return savedEvents.count * 100 // Mock size calculation
     }
 }

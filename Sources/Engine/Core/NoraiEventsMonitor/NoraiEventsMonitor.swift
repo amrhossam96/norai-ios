@@ -33,33 +33,20 @@ public actor NoraiEventsMonitor {
     
     private func startPeriodicClock() {
         timerTask = Task {
-            await logger.log("📅 Starting periodic clock...")
             while isTimerOn {
                 try await clock.sleep(for: .seconds(1))
-                let bufferStatus = await buffer.shouldFlush() ? "FULL" : "NOT_FULL"
-                await logger.log("⏰ Tick! Buffer: \(bufferStatus)")
-                
                 if await shouldFlush() {
                     lastFlushingTime = .now
-                    await logger.log("🚀 Flushing events! Yielding to stream...")
                     streamContinuation?.yield()
-                    await logger.log("✅ Stream yielded at \(lastFlushingTime?.description ?? "")")
                 }
             }
-            await logger.log("⏹️ Periodic clock stopped")
         }
     }
     
     private func shouldFlush() async -> Bool {
         let timeSinceLastFlush = shouldFlushBasedOnTime()
         let bufferIsFull = await shouldFlushBasedOnBufferSize()
-        let shouldFlushResult = timeSinceLastFlush || bufferIsFull
-        
-        if shouldFlushResult {
-            await logger.log("🔍 Flush triggered - Time: \(timeSinceLastFlush), Buffer full: \(bufferIsFull)")
-        }
-        
-        return shouldFlushResult
+        return timeSinceLastFlush || bufferIsFull
     }
     
     private func shouldFlushBasedOnTime() -> Bool {
@@ -67,7 +54,7 @@ public actor NoraiEventsMonitor {
             return true
         }
         
-        return Date().timeIntervalSince(lastFlushingTime) >= 5.0  // Reduced from 20s to 5s for testing
+        return Date().timeIntervalSince(lastFlushingTime) >= 30.0
     }
     
     private func shouldFlushBasedOnBufferSize() async -> Bool {
@@ -100,7 +87,6 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         return AsyncStream<Void> { continuation in
             Task {
                 await self.setContinution(continuation)
-                await self.logger.log("🔄 Stream continuation set up successfully")
             }
         }
     }
