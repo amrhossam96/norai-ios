@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Norai
+@testable import Norai
 
 actor MockedEnrichmentPipeline: NoraiEnrichmentPipelineProtocol {
     var isEnrichCalled: Bool = false

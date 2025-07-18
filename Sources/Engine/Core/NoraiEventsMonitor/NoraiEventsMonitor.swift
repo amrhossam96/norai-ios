@@ -7,11 +7,11 @@
 
 import Foundation
 
-public enum NoraiEventsMonitorErrors: Error {
+enum NoraiEventsMonitorErrors: Error {
     case alreadyStarted
 }
 
-public actor NoraiEventsMonitor {
+actor NoraiEventsMonitor {
     
     // MARK: - Private
 
@@ -21,11 +21,11 @@ public actor NoraiEventsMonitor {
     private var timerTask: Task<Void, Error>?
     private var streamContinuation: AsyncStream<Void>.Continuation?
     private var logger: NoraiLoggerProtocol
-    // MARK: - Public
+    // MARK: - Internal
 
-    public let buffer: NoraiBufferProtocol
+    let buffer: NoraiBufferProtocol
 
-    public init(buffer: NoraiBufferProtocol, clock: any Clock<Duration>, logger: NoraiLoggerProtocol) {
+    init(buffer: NoraiBufferProtocol, clock: any Clock<Duration>, logger: NoraiLoggerProtocol) {
         self.buffer = buffer
         self.clock = clock
         self.logger = logger
@@ -67,7 +67,7 @@ public actor NoraiEventsMonitor {
 }
 
 extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
-    public func startMonitoring() async throws {
+    func startMonitoring() async throws {
         guard !isTimerOn else {
             throw NoraiEventsMonitorErrors.alreadyStarted
         }
@@ -75,7 +75,7 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         startPeriodicClock()
     }
     
-    public func stopMonitoring() async throws {
+    func stopMonitoring() async throws {
         timerTask?.cancel()
         timerTask = nil
         isTimerOn = false
@@ -83,7 +83,7 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         streamContinuation = nil
     }
     
-    nonisolated public func listenToMonitorStream() -> AsyncStream<Void> {
+    nonisolated func listenToMonitorStream() -> AsyncStream<Void> {
         return AsyncStream<Void> { continuation in
             Task {
                 await self.setContinution(continuation)

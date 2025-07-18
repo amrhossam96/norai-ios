@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Norai
+@testable import Norai
 
 enum MockedNoraiEngineStateManagerMessages {
     case startEngine

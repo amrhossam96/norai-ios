@@ -16,7 +16,7 @@ enum NoraiCachingLayerError: Error {
     case directoryCreationFailed
 }
 
-public actor NoraiCachingLayer {
+actor NoraiCachingLayer {
     private let fileURL: URL
     private let maxFileSize: Int = 10 * 1024 * 1024 // 10MB limit
     private let maxEvents: Int = 1000 // Maximum events to store
@@ -24,7 +24,7 @@ public actor NoraiCachingLayer {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     
-    public init(fileName: String = "norai_cached_events.jsonl") {
+    init(fileName: String = "norai_cached_events.jsonl") {
         // Use applicationSupportDirectory instead of cachesDirectory
         // This ensures data persists and won't be deleted by iOS
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -48,7 +48,7 @@ public actor NoraiCachingLayer {
 
 extension NoraiCachingLayer: NoraiCachingLayerProtocol {
     /// Efficiently append events to cache file using JSONL format
-    public func save(_ events: [NoraiEvent]) async throws {
+    func save(_ events: [NoraiEvent]) async throws {
         guard !events.isEmpty else { return }
         
         // Check if we need to rotate the file due to size or count limits
@@ -63,7 +63,12 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
             do {
                 let eventData = try encoder.encode(event)
                 dataToAppend.append(eventData)
-                dataToAppend.append("\n".data(using: .utf8)!) // Add newline separator
+                
+                // Add newline separator safely
+                guard let newlineData = "\n".data(using: .utf8) else {
+                    throw NoraiCachingLayerError.encodingError
+                }
+                dataToAppend.append(newlineData)
             } catch {
                 print("❌ Failed to encode event \(event.id): \(error)")
                 throw NoraiCachingLayerError.encodingError
@@ -91,7 +96,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
     }
     
     /// Read all cached events from JSONL file
-    public func getAll() async throws -> [NoraiEvent] {
+    func getAll() async throws -> [NoraiEvent] {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return [] // Return empty array instead of throwing error
         }
@@ -130,7 +135,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
     }
     
     /// Clear all cached events
-    public func clear() async throws {
+    func clear() async throws {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return // File doesn't exist, nothing to clear
         }
@@ -203,7 +208,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
 
 extension NoraiCachingLayer {
     /// Get count of cached events without loading all data
-    public func getEventCount() async -> Int {
+    func getEventCount() async -> Int {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return 0
         }
@@ -221,7 +226,7 @@ extension NoraiCachingLayer {
     }
     
     /// Get cache file size in bytes
-    public func getCacheSize() async -> Int {
+    func getCacheSize() async -> Int {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return 0
         }

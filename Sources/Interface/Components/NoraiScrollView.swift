@@ -228,8 +228,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         eventType: EventType,
         viewDuration: TimeInterval? = nil
     ) {
-        guard let engine = Norai.shared.getEngine() else { return }
-        
         // Create rich event context
         let context = EventContext(
             screen: screenName,
@@ -251,9 +249,9 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             ]
         )
         
-        // Send to engine asynchronously
+        // Send to engine asynchronously using the singleton interface
         Task {
-            await engine.track(event: event)
+            await Norai.shared.track(event: event)
         }
     }
     

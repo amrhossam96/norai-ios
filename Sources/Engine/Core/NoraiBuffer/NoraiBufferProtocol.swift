@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NoraiBufferProtocol: Sendable {
+protocol NoraiBufferProtocol: Sendable {
     func add(_ event: NoraiEvent) async
     func drain() async -> [NoraiEvent]
     func shouldFlush() async -> Bool

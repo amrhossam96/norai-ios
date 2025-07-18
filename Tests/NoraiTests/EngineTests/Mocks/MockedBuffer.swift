@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Norai
+@testable import Norai
 
 actor MockedBuffer: NoraiBufferProtocol {
     var shouldFlush: Bool = false

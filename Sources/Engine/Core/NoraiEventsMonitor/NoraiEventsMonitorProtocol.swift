@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol NoraiEventsMonitorProtocol: Sendable {
+protocol NoraiEventsMonitorProtocol: Sendable {
     var buffer: NoraiBufferProtocol { get }
     func startMonitoring() async throws
     func stopMonitoring() async throws

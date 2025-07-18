@@ -12,7 +12,7 @@ public enum NoraiEngineErrors: Error {
     case failedToDispatchEvents
 }
 
-public final actor NoraiEngine {
+final actor NoraiEngine {
     private let config: NoraiConfiguration
     private let logger: any NoraiLoggerProtocol
     
@@ -25,7 +25,7 @@ public final actor NoraiEngine {
     private let dispatcher: any NoraiEventsDispatcherProtocol
     private let cache: any NoraiCachingLayerProtocol
 
-    public init(
+    init(
         config: NoraiConfiguration,
         logger: any NoraiLoggerProtocol,
         stateManager: any NoraiEngineStateManagerProtocol,
@@ -96,17 +96,17 @@ public final actor NoraiEngine {
 }
 
 extension NoraiEngine: NoraiEngineProtocol {
-    public func track(event: NoraiEvent) async {
+    func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
         await logger.log(enrichedEvent, level: config.logLevel)
         await buffer.add(enrichedEvent)
     }
     
-    public func identify(user context: NoraiUserContext) async {
+    func identify(user context: NoraiUserContext) async {
         await stateManager.update(user: context)
     }
     
-    public func start() async throws {
+    func start() async throws {
         guard await stateManager.startEngine() else {
             await logger.log(NoraiEngineErrors.alreadyStarted, level: .error)
             throw NoraiEngineErrors.alreadyStarted
