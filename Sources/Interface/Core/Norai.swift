@@ -110,8 +110,8 @@ public final class Norai: @unchecked Sendable {
             return
         }
         await engine.track(event: NoraiEvent(
-            type: .screenViewed,
-            context: EventContext(screen: screenName),
+            event: "screen_viewed",
+            context: ["screen_name": screenName],
             tags: ["navigation", "screen_view"]
         ))
     }
@@ -134,18 +134,16 @@ public final class Norai: @unchecked Sendable {
         await engine.track(event: event)
     }
     
-    /// Track an event with custom parameters
+    /// Track an event with properties and context (NEW SIMPLE API)
     public func track(
-        type: EventType,
-        context: EventContext? = nil,
-        metadata: EventMetadata? = nil,
-        tags: [String] = []
+        _ eventName: String,
+        properties: [String: String] = [:],
+        context: [String: String] = [:]
     ) async {
         let event = NoraiEvent(
-            type: type,
-            context: context ?? EventContext(),
-            metadata: metadata ?? EventMetadata(),
-            tags: tags
+            event: eventName,
+            properties: properties,
+            context: context
         )
         await track(event: event)
     }

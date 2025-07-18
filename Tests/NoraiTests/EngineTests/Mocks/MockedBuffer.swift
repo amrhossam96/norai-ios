@@ -35,4 +35,13 @@ actor MockedBuffer: NoraiBufferProtocol {
     func setEvents(_ newEvents: [NoraiEvent]) {
         events = newEvents
     }
+    
+    // Additional helper methods for test compatibility
+    func getBufferedEvents() async -> [NoraiEvent] {
+        return events
+    }
+    
+    func drainEvents() async -> [NoraiEvent] {
+        return await drain()
+    }
 }

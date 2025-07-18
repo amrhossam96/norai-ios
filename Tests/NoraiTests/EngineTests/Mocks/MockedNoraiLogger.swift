@@ -16,18 +16,20 @@ actor MockedNoraiLogger: NoraiLoggerProtocol {
     var isLogMessageCalled: Bool = false
     var isErrorLogged: Bool = false
     var logMessages: [String] = []
+    var logCalls: [String] { logMessages } // Alias for compatibility
     var lastLogLevel: LogLevel?
 
     func log(_ event: NoraiEvent, level: LogLevel) {
         isLogCalled = true
         lastLogLevel = level
-        logMessages.append("Event added to buffer: \(event.type.rawValue)")
+        logMessages.append("Event added to buffer: \(event.event)")
     }
     
     func log(_ error: any Error, level: LogLevel) {
         isLogErrorCalled = true
         isErrorLogged = true
         lastLogLevel = level
+        logMessages.append("Error: \(error.localizedDescription)")
     }
     
     func getCurrentLogLevel() -> LogLevel {

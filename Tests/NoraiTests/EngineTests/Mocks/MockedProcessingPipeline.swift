@@ -24,4 +24,8 @@ public actor MockedProcessingPipeline: NoraiProcessingPipelineProtocol {
     public func setProcessedEvents(_ events: [NoraiEvent]) {
         eventsToReturn = events
     }
+    
+    public func getLastProcessedEvents() async -> [NoraiEvent] {
+        return processedEvents
+    }
 } 

@@ -26,15 +26,12 @@ public actor ViewDurationProcessor: NoraiEventProcessorProtocol {
     
     private func processEvent(_ event: NoraiEvent) async -> NoraiEvent {
         // Handle focus events for item views
-        switch event.type {
-        case .itemFocusStarted:
+        switch event.event {
+        case "item_focus_started":
             return await handleFocusStarted(event: event)
-            
-        case .itemFocusEnded:
+        case "item_focus_ended":
             return await handleFocusEnded(event: event)
-            
         default:
-            // Pass through other events unchanged
             return event
         }
     }
@@ -43,68 +40,58 @@ public actor ViewDurationProcessor: NoraiEventProcessorProtocol {
     
     private func handleFocusStarted(event: NoraiEvent) async -> NoraiEvent {
         // Store the started event for later combination
-        if let itemId = event.context.itemId {
+        if let itemId = event.context["itemId"] {
             let key = createKey(sessionId: event.sessionId, itemId: itemId)
             pendingStartEvents[key] = event
         }
         
         // Return a "suppressed" event (we'll use a special type to indicate it shouldn't be dispatched)
         var suppressedEvent = event
-        suppressedEvent.type = .interaction // Temporary placeholder
+        suppressedEvent.event = "interaction" // Temporary placeholder
         suppressedEvent.tags.append("suppressed")
         return suppressedEvent
     }
     
     private func handleFocusEnded(event: NoraiEvent) async -> NoraiEvent {
-        guard let itemId = event.context.itemId,
+        guard let itemId = event.context["itemId"],
               let sessionId = event.sessionId else {
             return event
         }
         
         let key = createKey(sessionId: sessionId, itemId: itemId)
         
-        // Find the matching started event
-        guard let startedEvent = pendingStartEvents[key] else {
-            // No matching start event - return ended event as-is
+        guard let startedEvent = pendingStartEvents.removeValue(forKey: key) else {
+            // No matching start event found, return the ended event as-is
             return event
         }
         
-        // Remove from pending events
-        pendingStartEvents.removeValue(forKey: key)
-        
-        // Create a combined "item_viewed" event
+        // We have both start and end events, create a combined event
         return createCombinedEvent(startedEvent: startedEvent, endedEvent: event)
     }
     
     private func createCombinedEvent(startedEvent: NoraiEvent, endedEvent: NoraiEvent) -> NoraiEvent {
         // Create comprehensive context with timing information
-        let combinedContext = EventContext(
-            screen: startedEvent.context.screen,
-            component: startedEvent.context.component,
-            itemId: startedEvent.context.itemId,
-            visibilityRatio: startedEvent.context.visibilityRatio, // Peak visibility
-            viewDuration: endedEvent.context.viewDuration,
-            position: startedEvent.context.position,
-            totalItems: startedEvent.context.totalItems
-        )
+        var combinedContext = startedEvent.context
+        combinedContext["screen"] = startedEvent.context["screen"]
+        combinedContext["component"] = startedEvent.context["component"]
+        combinedContext["itemId"] = startedEvent.context["itemId"]
+        combinedContext["visibilityRatio"] = startedEvent.context["visibilityRatio"]
+        combinedContext["viewDuration"] = endedEvent.context["viewDuration"]
+        combinedContext["position"] = startedEvent.context["position"]
+        combinedContext["totalItems"] = startedEvent.context["totalItems"]
         
-        // Combine tags and dependencies
+        // Combine tags
         let combinedTags = Array(Set(startedEvent.tags + endedEvent.tags + ["item_view", "processed"]))
-        let combinedDependencies = startedEvent.dependencies + endedEvent.dependencies + [
-            EventDependency(key: "focusStartTime", value: .string(startedEvent.timestamp?.iso8601String ?? "")),
-            EventDependency(key: "focusEndTime", value: .string(endedEvent.timestamp?.iso8601String ?? ""))
-        ]
         
         return NoraiEvent(
             id: UUID(),
-            type: .itemViewed, // Clean, single event type
+            event: "item_viewed", // Clean, single event type
             timestamp: startedEvent.timestamp, // Use the start time as primary timestamp
             sessionId: startedEvent.sessionId,
             userId: startedEvent.userId,
             context: combinedContext,
             metadata: startedEvent.metadata, // Use start event metadata
-            tags: combinedTags,
-            dependencies: combinedDependencies
+            tags: combinedTags
         )
     }
     

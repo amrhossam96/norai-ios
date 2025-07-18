@@ -9,80 +9,47 @@ import Foundation
 
 public struct NoraiEvent: Codable, Sendable {
     public var id: UUID = UUID()
-    public var type: EventType
+    public var event: String
     var timestamp: Date?
     var sessionId: UUID?
     var userId: String?
     
-    // Rich context information
-    var context: EventContext = EventContext()
+    // Business properties - what happened
+    var properties: [String: String] = [:]
     
-    // Device and app metadata  
+    // UI/UX context - how/where it happened  
+    var context: [String: String] = [:]
+    
+    // Device and app metadata (auto-codable)
     var metadata: EventMetadata = EventMetadata()
     
-    // Event categorization
+    // Event categorization (auto-codable)
     var tags: [String] = []
-    
-    // Related state dependencies
-    var dependencies: [EventDependency] = []
-    
-    // Legacy metadata for backward compatibility
-    var metaData: [String: CodableValue] = [:]
     
     public init(
         id: UUID = UUID(),
-        type: EventType,
+        event: String,
         timestamp: Date? = nil,
         sessionId: UUID? = nil,
         userId: String? = nil,
-        context: EventContext = EventContext(),
+        properties: [String: String] = [:],
+        context: [String: String] = [:],
         metadata: EventMetadata = EventMetadata(),
-        tags: [String] = [],
-        dependencies: [EventDependency] = [],
-        metaData: [String : CodableValue] = [:]
+        tags: [String] = []
     ) {
         self.id = id
-        self.type = type
+        self.event = event
         self.timestamp = timestamp
         self.sessionId = sessionId
         self.userId = userId
+        self.properties = properties
         self.context = context
         self.metadata = metadata
         self.tags = tags
-        self.dependencies = dependencies
-        self.metaData = metaData
     }
 }
 
 // MARK: - Supporting Structures
-
-public struct EventContext: Codable, Sendable {
-    var screen: String?
-    var component: String?
-    var itemId: String?
-    var visibilityRatio: Double?
-    var viewDuration: Double?
-    var position: Int?
-    var totalItems: Int?
-    
-    public init(
-        screen: String? = nil,
-        component: String? = nil,
-        itemId: String? = nil,
-        visibilityRatio: Double? = nil,
-        viewDuration: Double? = nil,
-        position: Int? = nil,
-        totalItems: Int? = nil
-    ) {
-        self.screen = screen
-        self.component = component
-        self.itemId = itemId
-        self.visibilityRatio = visibilityRatio
-        self.viewDuration = viewDuration
-        self.position = position
-        self.totalItems = totalItems
-    }
-}
 
 public struct EventMetadata: Codable, Sendable {
     var appVersion: String?
@@ -112,15 +79,5 @@ public struct EventMetadata: Codable, Sendable {
         self.networkType = networkType
         self.timezone = timezone
         self.screenSize = screenSize
-    }
-}
-
-public struct EventDependency: Codable, Sendable {
-    let key: String
-    let value: CodableValue
-    
-    public init(key: String, value: CodableValue) {
-        self.key = key
-        self.value = value
     }
 }

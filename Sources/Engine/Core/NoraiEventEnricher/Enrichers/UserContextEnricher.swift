@@ -11,12 +11,12 @@ public struct UserContextEnricher: NoraiEventEnricherProtocol {
     public init() {}
     public func enrich(event: NoraiEvent, with state: NoraiEngineState) async -> NoraiEvent {
             var enrichedEvent: NoraiEvent = event
-            enrichedEvent.metaData["user.firstName"] = .string(state.userContext?.firstName ?? "")
-            enrichedEvent.metaData["user.lastName"] = .string(state.userContext?.lastName ?? "")
-            enrichedEvent.metaData["user.email"] = .string(state.userContext?.email ?? "")
-            enrichedEvent.metaData["user.id"] = .string(state.userContext?.id ?? "")
-            enrichedEvent.metaData["user.isLoggedIn"] = .bool(state.userContext?.isLoggedIn ?? false)
-            enrichedEvent.metaData["user.anonymousId"] = .string(state.userContext?.anonymousId ?? "")
+            enrichedEvent.properties["user.firstName"] = state.userContext?.firstName ?? ""
+            enrichedEvent.properties["user.lastName"] = state.userContext?.lastName ?? ""
+            enrichedEvent.properties["user.email"] = state.userContext?.email ?? ""
+            enrichedEvent.properties["user.id"] = state.userContext?.id ?? ""
+            enrichedEvent.properties["user.isLoggedIn"] = String(state.userContext?.isLoggedIn ?? false)
+            enrichedEvent.properties["user.anonymousId"] = state.userContext?.anonymousId ?? ""
             return enrichedEvent
         }
 }

@@ -34,4 +34,8 @@ actor MockedEnrichmentPipeline: NoraiEnrichmentPipelineProtocol {
     func setShouldFail(_ fail: Bool) {
         shouldFail = fail
     }
+    
+    func setShouldThrowError(_ shouldThrow: Bool) {
+        shouldFail = shouldThrow
+    }
 }

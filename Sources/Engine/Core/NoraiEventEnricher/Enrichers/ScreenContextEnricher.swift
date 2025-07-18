@@ -14,7 +14,7 @@ public struct ScreenContextEnricher: NoraiEventEnricherProtocol {
         var enrichedEvent = event
         
         // Add screen information from engine state
-        enrichedEvent.context.screen = state.lastScreen
+        enrichedEvent.context["screen"] = state.lastScreen
         
         // Add session context
         enrichedEvent.sessionId = state.sessionId

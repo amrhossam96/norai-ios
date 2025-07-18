@@ -8,21 +8,25 @@
 import Foundation
 
 public struct NoraiLogger {
-    private var currentLevel: LogLevel
+    private var _currentLevel: LogLevel
     
     public init(currentLevel: LogLevel) {
-        self.currentLevel = currentLevel
+        self._currentLevel = currentLevel
+    }
+    
+    public var currentLevel: LogLevel {
+        return _currentLevel
     }
 }
 
 extension NoraiLogger: NoraiLoggerProtocol {
     public func log(_ event: NoraiEvent, level: LogLevel) {
-        guard level >= currentLevel else { return }
-        print("[Norai - \(level.description)] - Event Type: \(event.type.rawValue)\n[Norai - \(level.description)] - Timestamp: \(event.timestamp ?? .now)")
+        guard level >= _currentLevel else { return }
+        print("[Norai - \(level.description)] - Event Type: \(event.event)\n[Norai - \(level.description)] - Timestamp: \(event.timestamp ?? .now)")
     }
     
     public func getCurrentLogLevel() -> LogLevel {
-        return currentLevel
+        return _currentLevel
     }
     
     public func log(_ error: any Error, level: LogLevel) {
@@ -30,6 +34,6 @@ extension NoraiLogger: NoraiLoggerProtocol {
     }
     
     public func log(_ message: String) async {
-        print("[Norai - \(currentLevel.description)]: \(message)")
+        print("[Norai - \(_currentLevel.description)]: \(message)")
     }
 }

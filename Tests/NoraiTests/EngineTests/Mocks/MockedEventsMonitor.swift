@@ -15,6 +15,7 @@ actor MockedEventsMonitor: NoraiEventsMonitorProtocol {
     var isStartMonitoringCalled: Bool = false
     var isStopMonitoringCalled: Bool = false
     var isListentoMonitorStreamCalled: Bool = false
+    var isStartCalled: Bool { isStartMonitoringCalled } // Alias for compatibility
     private var streamContinuation: AsyncStream<Void>.Continuation?
     
     init(buffer: any NoraiBufferProtocol) {

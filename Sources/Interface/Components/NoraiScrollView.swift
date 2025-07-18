@@ -205,7 +205,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             print("✅ \(id) appeared (visible ratio: \(String(format: "%.2f", ratio)))")
             
             // 🎯 CREATE AND SEND EVENT TO NORAI ENGINE
-            sendImpressionEvent(for: id, ratio: ratio, eventType: .itemFocusStarted)
+            sendImpressionEvent(for: id, ratio: ratio, eventName: "item_focus_started")
         }
     }
     
@@ -216,7 +216,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             print("⛔️ \(id) disappeared. Duration: \(String(format: "%.2f", duration))s")
             
             // 🎯 CREATE AND SEND EVENT TO NORAI ENGINE
-            sendImpressionEvent(for: id, ratio: 0, eventType: .itemFocusEnded, viewDuration: duration)
+            sendImpressionEvent(for: id, ratio: 0, eventName: "item_focus_ended", viewDuration: duration)
         }
     }
     
@@ -225,28 +225,27 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     private func sendImpressionEvent(
         for itemId: AnyHashable, 
         ratio: CGFloat, 
-        eventType: EventType,
+        eventName: String,
         viewDuration: TimeInterval? = nil
     ) {
         // Create rich event context
-        let context = EventContext(
-            screen: screenName,
-            component: componentName,
-            itemId: "\(itemId)",
-            visibilityRatio: Double(ratio),
-            viewDuration: viewDuration,
-            position: findItemPosition(id: itemId),
-            totalItems: data.count
-        )
+        var context: [String: String] = [:]
+        context["screen"] = screenName
+        context["component"] = componentName ?? ""
+        context["itemId"] = "\(itemId)"
+        context["visibilityRatio"] = "\(Double(ratio))"
+        if let duration = viewDuration {
+            context["viewDuration"] = "\(duration)"
+        }
+        if let position = findItemPosition(id: itemId) {
+            context["position"] = "\(position)"
+        }
+        context["totalItems"] = "\(data.count)"
 
         let event = NoraiEvent(
-            type: eventType,
+            event: eventName,
             context: context,
-            tags: ["impression", "scroll_view", "visibility"],
-            dependencies: [
-                EventDependency(key: "currentlyVisible", value: .array(currentlyVisible.map { .string("\($0)") })),
-                EventDependency(key: "totalItemsInView", value: .int(currentlyVisible.count))
-            ]
+            tags: ["impression", "scroll_view", "visibility"]
         )
         
         // Send to engine asynchronously using the singleton interface
