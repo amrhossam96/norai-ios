@@ -26,7 +26,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     // Performance optimization state
     @State private var lastScrollOffset: CGFloat = 0
     @State private var cachedVisibleArea: CGRect = .zero
-    @State private var throttleWorkItem: DispatchWorkItem?
+    @State private var throttleTask: Task<Void, Never>?
     @State private var currentlyVisible: Set<AnyHashable> = []
     
     private let visibilityThreshold: CGFloat = 0.5
@@ -110,17 +110,11 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     @MainActor
     private func scheduleThrottledVisibilityComputation() {
         // Cancel previous throttled computation
-        throttleWorkItem?.cancel()
-        
-        // Create new throttled computation
-        let workItem = DispatchWorkItem {
-            Task { @MainActor in
-                self.computeVisibility()
-            }
+        throttleTask?.cancel()
+        throttleTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: UInt64(throttleDelay * 1_000_000_000))
+            self.computeVisibility()
         }
-        
-        throttleWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + throttleDelay, execute: workItem)
     }
     
     @MainActor
