@@ -56,6 +56,7 @@ final actor NoraiEngine {
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
                 guard !processedEvents.isEmpty else  { return }
                 await self.dispatch(processedEvents)
+                await self.logger.log("Dispatched \(processedEvents.count) Events")
             }
         }
     }
@@ -98,7 +99,6 @@ final actor NoraiEngine {
 extension NoraiEngine: NoraiEngineProtocol {
     func track(event: NoraiEvent) async {
         let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
-        await logger.log(enrichedEvent, level: config.logLevel)
         await buffer.add(enrichedEvent)
     }
     

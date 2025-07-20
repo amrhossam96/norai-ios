@@ -24,7 +24,7 @@ actor NoraiCachingLayer {
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     
-    init(fileName: String = "norai_cached_events.jsonl") {
+    init(fileName: String = "norai_cached_events.json") {
         // Use applicationSupportDirectory instead of cachesDirectory
         // This ensures data persists and won't be deleted by iOS
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

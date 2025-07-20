@@ -142,7 +142,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
                 continue
             }
             
-            // Quick visibility check
             let visibleRatio = calculateVisibilityRatio(
                 itemFrame: itemFrame,
                 visibleArea: cachedVisibleArea
@@ -155,8 +154,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
                 handleItemDisappeared(id: id)
             }
         }
-        
-        // Update currently visible set
+
         currentlyVisible = newlyVisible
     }
     
@@ -172,13 +170,11 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     }
     
     private func calculateVisibilityRatio(itemFrame: CGRect, visibleArea: CGRect) -> CGFloat {
-        // Fast intersection calculation
         let intersectionMinX = max(itemFrame.minX, visibleArea.minX)
         let intersectionMinY = max(itemFrame.minY, visibleArea.minY)
         let intersectionMaxX = min(itemFrame.maxX, visibleArea.maxX)
         let intersectionMaxY = min(itemFrame.maxY, visibleArea.maxY)
-        
-        // Early return if no intersection
+
         guard intersectionMinX < intersectionMaxX && intersectionMinY < intersectionMaxY else {
             return 0
         }
@@ -196,9 +192,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     private func handleItemAppeared(id: AnyHashable, ratio: CGFloat) {
         if visibleStartDates[id] == nil {
             visibleStartDates[id] = Date()
-            print("✅ \(id) appeared (visible ratio: \(String(format: "%.2f", ratio)))")
-            
-            // 🎯 CREATE AND SEND EVENT TO NORAI ENGINE
             sendImpressionEvent(for: id, ratio: ratio, eventName: "item_focus_started")
         }
     }
@@ -207,9 +200,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         if let startDate = visibleStartDates[id] {
             let duration = Date().timeIntervalSince(startDate)
             visibleStartDates[id] = nil
-            print("⛔️ \(id) disappeared. Duration: \(String(format: "%.2f", duration))s")
-            
-            // 🎯 CREATE AND SEND EVENT TO NORAI ENGINE
             sendImpressionEvent(for: id, ratio: 0, eventName: "item_focus_ended", viewDuration: duration)
         }
     }
