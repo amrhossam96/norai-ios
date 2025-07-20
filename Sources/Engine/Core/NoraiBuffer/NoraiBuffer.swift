@@ -7,6 +7,10 @@
 
 import Foundation
 
+private enum NoraiBufferPolicy {
+    static let maxEventsCount: Int = 20
+}
+
 actor NoraiBuffer {
     private var events: [NoraiEvent]
     init(events: [NoraiEvent] = []) {
@@ -26,6 +30,6 @@ extension NoraiBuffer: NoraiBufferProtocol {
     }
     
     func shouldFlush() async -> Bool {
-        return events.count >= 3  // Reduced from 20 to 3 for easier testing
+        return events.count >= NoraiBufferPolicy.maxEventsCount
     }
 }
