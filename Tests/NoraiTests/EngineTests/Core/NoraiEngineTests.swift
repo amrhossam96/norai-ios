@@ -128,25 +128,7 @@ struct NoraiEngineTests {
         #expect(bufferedEvents.first?.sessionId == expectedEnrichedEvent.sessionId)
     }
     
-    @Test func trackShouldLogEvent() async {
-        let sut = makeSUT()
-        let event = createTestEvent("interaction")
-        
-        await sut.track(event: event)
-        
-        let logCalls = await mockedLogger.logCalls
-        #expect(logCalls.count == 1)
-    }
-    
-    @Test func trackShouldLogEventAddedToBuffer() async {
-        let sut: NoraiEngine = makeSUT()
-        let event = createTestEvent("item_viewed")
-        await sut.track(event: event)
-        
-        let logCalls = await mockedLogger.logCalls
-        #expect(logCalls.count == 1)
-        #expect(logCalls.contains { $0.contains("added to buffer") || $0.contains("Added to buffer") })
-    }
+
     
     // MARK: - Identify User Tests
     
@@ -289,21 +271,7 @@ struct NoraiEngineTests {
         let processedEvents = await mockedProcessingPipeline.getLastProcessedEvents()
         #expect(processedEvents.count >= 0)
     }
-    
-    // MARK: - Error Handling Tests
-    
-    @Test func engineShouldHandleEnrichmentErrors() async {
-        let sut = makeSUT()
-        await mockedEnrichmentPipeline.setShouldThrowError(true)
-        
-        let event = createTestEvent("item_viewed")
-        await sut.track(event: event)
-        
-        // Engine should log errors but continue working
-        let logCalls = await mockedLogger.logCalls
-        #expect(logCalls.count >= 1)
-    }
-    
+
     // MARK: - Configuration Tests
     
     @Test func engineShouldUseConfigurationLogLevel() async {

@@ -22,6 +22,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     @State private var scrollViewFrame: CGRect = .zero
     @State private var viewFrames: [AnyHashable: ViewFrame] = [:]
     @State private var visibleStartDates: [AnyHashable: Date] = [:]
+    @State private var viewProperties: [AnyHashable: [String: String]] = [:]
     
     // Performance optimization state
     @State private var lastScrollOffset: CGFloat = 0
@@ -60,6 +61,9 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             }
             .onChange(of: scrollProxy.frame(in: .local)) { newFrame in
                 handleFrameChange(newFrame: newFrame)
+            }
+            .onPreferenceChange(TrackingPropertiesPreferenceKey.self) { properties in
+                self.viewProperties = properties
             }
         }
         .onPreferenceChange(ViewFramePreferenceKey.self) { frames in
@@ -226,11 +230,12 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         }
         context["totalItems"] = "\(data.count)"
 
-        let event = NoraiEvent(
+        var event = NoraiEvent(
             event: eventName,
             context: context,
             tags: ["impression", "scroll_view", "visibility"]
         )
+        event.properties = viewProperties[itemId] ?? [:]
 
         Task {
             await Norai.shared.track(event: event)

@@ -69,7 +69,6 @@ public final class Norai: @unchecked Sendable {
         // Create enrichment pipeline with all enrichers
         let enrichers: [any NoraiEventEnricherProtocol] = [
             TimestampEnricher(),
-            UserContextEnricher(),
             DeviceMetadataEnricher(),
             ScreenContextEnricher(),
             NetworkContextEnricher(networkMonitor: networkMonitor)

@@ -141,77 +141,12 @@ struct EnrichersTests {
         #expect(enrichedEvent.sessionId == state.sessionId)
     }
     
-    // MARK: - User Context Enricher Tests
+
     
-    @Test func userContextEnricherShouldAddUserMetadataFromState() async {
-        let enricher = UserContextEnricher()
-        let userContext = NoraiUserContext(
-            id: "user-123",
-            firstName: "John",
-            lastName: "Doe",
-            email: "john.doe@example.com",
-            isLoggedIn: true
-        )
-        let state = createTestState(userContext: userContext)
-        let event = createTestEvent()
-        
-        let enrichedEvent = await enricher.enrich(event: event, with: state)
-        
-        #expect(enrichedEvent.properties["user.id"] == "user-123")
-        #expect(enrichedEvent.properties["user.firstName"] == "John")
-        #expect(enrichedEvent.properties["user.lastName"] == "Doe")
-        #expect(enrichedEvent.properties["user.email"] == "john.doe@example.com")
-        #expect(enrichedEvent.properties["user.isLoggedIn"] == "true")
-    }
+
     
-    @Test func userContextEnricherShouldHandleNilUserContext() async {
-        let enricher = UserContextEnricher()
-        let state = createTestState(userContext: nil)
-        let event = createTestEvent()
-        
-        let enrichedEvent = await enricher.enrich(event: event, with: state)
-        
-        #expect(enrichedEvent.properties["user.id"] == "")
-        #expect(enrichedEvent.properties["user.firstName"] == "")
-        #expect(enrichedEvent.properties["user.lastName"] == "")
-        #expect(enrichedEvent.properties["user.email"] == "")
-        #expect(enrichedEvent.properties["user.isLoggedIn"] == "false")
-    }
+
     
-    @Test func userContextEnricherShouldHandleUserContextWithNilId() async {
-        let enricher = UserContextEnricher()
-        let userContext = NoraiUserContext(
-            id: nil,
-            firstName: "Jane",
-            lastName: "Smith",
-            email: "jane@example.com",
-            isLoggedIn: false
-        )
-        let state = createTestState(userContext: userContext)
-        let event = createTestEvent()
-        
-        let enrichedEvent = await enricher.enrich(event: event, with: state)
-        
-        #expect(enrichedEvent.properties["user.id"] == "")
-        #expect(enrichedEvent.properties["user.firstName"] == "Jane")
-        #expect(enrichedEvent.properties["user.lastName"] == "Smith")
-        #expect(enrichedEvent.properties["user.isLoggedIn"] == "false")
-    }
-    
-    @Test func userContextEnricherShouldPreserveExistingUserId() async {
-        let enricher = UserContextEnricher()
-        let userContext = NoraiUserContext(id: "state-user", isLoggedIn: true)
-        let state = createTestState(userContext: userContext)
-        
-        var event = createTestEvent()
-        event.userId = "existing-user"
-        
-        let enrichedEvent = await enricher.enrich(event: event, with: state)
-        
-        // Should add to properties but preserve userId field
-        #expect(enrichedEvent.userId == "existing-user")
-        #expect(enrichedEvent.properties["user.id"] == "state-user")
-    }
     
     // MARK: - Device Metadata Enricher Tests
     
@@ -292,7 +227,7 @@ struct EnrichersTests {
     @Test func enrichersShouldWorkInSequence() async {
         let timestampEnricher = TimestampEnricher()
         let screenEnricher = ScreenContextEnricher()
-        let userEnricher = UserContextEnricher()
+        
         let mockNetworkMonitor = MockNetworkMonitor()
         let networkEnricher = NetworkContextEnricher(networkMonitor: mockNetworkMonitor)
         
@@ -311,27 +246,16 @@ struct EnrichersTests {
         // Apply enrichers in sequence
         event = await timestampEnricher.enrich(event: event, with: state)
         event = await screenEnricher.enrich(event: event, with: state)
-        event = await userEnricher.enrich(event: event, with: state)
+        
         event = await networkEnricher.enrich(event: event, with: state)
         
         // Verify all enrichments were applied
         #expect(event.timestamp != nil)
         #expect(event.context["screen"] == "IntegrationScreen")
-        #expect(event.properties["user.firstName"] == "Integration")
         #expect(event.metadata.networkType != nil) // Network type in metadata
     }
     
-    @Test func enrichersShouldHandleEmptyEvents() async {
-        let enricher = UserContextEnricher()
-        let state = createTestState()
-        let event = NoraiEvent(event: "empty_event")
-        
-        let enrichedEvent = await enricher.enrich(event: event, with: state)
-        
-        // Should not crash and should add user properties
-        #expect(enrichedEvent.event == "empty_event")
-        #expect(enrichedEvent.properties["user.id"] == "")
-    }
+ 
     
     @Test func enrichersShouldHandleComplexEvents() async {
         let enricher = TimestampEnricher()

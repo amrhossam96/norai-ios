@@ -97,7 +97,7 @@ struct NoraiBufferTests {
         let buffer = NoraiBuffer()
         
         // Add events to reach threshold (3)
-        for i in 1...3 {
+        for i in 1...NoraiBufferPolicy.maxEventsCount {
             await buffer.add(createTestEvent(id: "\(i)"))
         }
         
@@ -108,8 +108,7 @@ struct NoraiBufferTests {
     @Test func shouldFlushWhenAboveThreshold() async {
         let buffer = NoraiBuffer()
         
-        // Add more events than threshold
-        for i in 1...5 {
+        for i in 1...NoraiBufferPolicy.maxEventsCount + 1 {
             await buffer.add(createTestEvent(id: "\(i)"))
         }
         
@@ -121,7 +120,7 @@ struct NoraiBufferTests {
         let buffer = NoraiBuffer()
         
         // Fill buffer to threshold
-        for i in 1...3 {
+        for i in 1...NoraiBufferPolicy.maxEventsCount {
             await buffer.add(createTestEvent(id: "\(i)"))
         }
         
@@ -211,7 +210,7 @@ struct NoraiBufferTests {
         let buffer = NoraiBuffer()
         
         // Add some events first
-        for i in 1...5 {
+        for i in 1...NoraiBufferPolicy.maxEventsCount {
             await buffer.add(createTestEvent(id: "\(i)"))
         }
         

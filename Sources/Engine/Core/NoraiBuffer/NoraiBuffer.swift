@@ -7,7 +7,7 @@
 
 import Foundation
 
-private enum NoraiBufferPolicy {
+enum NoraiBufferPolicy {
     static let maxEventsCount: Int = 20
 }
 
