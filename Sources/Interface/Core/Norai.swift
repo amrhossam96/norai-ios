@@ -83,7 +83,8 @@ public final class Norai: @unchecked Sendable {
         // Create processing pipeline with all processors
         let processors: [any NoraiEventProcessorProtocol] = [
             ViewDurationProcessor(),
-            EventFilterProcessor()
+            EventFilterProcessor(),
+            NoiseFilteringProcessor()
         ]
         
         let processingPipeline = NoraiProcessingPipeline(processors: processors)

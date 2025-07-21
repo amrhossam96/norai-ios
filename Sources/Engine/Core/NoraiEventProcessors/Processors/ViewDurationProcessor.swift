@@ -75,7 +75,6 @@ public actor ViewDurationProcessor: NoraiEventProcessorProtocol {
         combinedContext["screen"] = startedEvent.context["screen"]
         combinedContext["component"] = startedEvent.context["component"]
         combinedContext["itemId"] = startedEvent.context["itemId"]
-        combinedContext["visibilityRatio"] = startedEvent.context["visibilityRatio"]
         combinedContext["viewDuration"] = endedEvent.context["viewDuration"]
         combinedContext["position"] = startedEvent.context["position"]
         combinedContext["totalItems"] = startedEvent.context["totalItems"]
