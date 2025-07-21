@@ -51,10 +51,10 @@ final actor NoraiEngine {
         Task.detached(priority: .background) {
             for await _ in stream {
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
-                guard !bufferedEvents.isEmpty else { return }
+                guard !bufferedEvents.isEmpty else { continue }
                 
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
-                guard !processedEvents.isEmpty else  { return }
+                guard !processedEvents.isEmpty else { continue }
                 await self.dispatch(processedEvents)
                 await self.logger.log("Dispatched \(processedEvents.count) Events")
             }
