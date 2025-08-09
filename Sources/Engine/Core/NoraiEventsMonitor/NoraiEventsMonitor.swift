@@ -35,6 +35,7 @@ actor NoraiEventsMonitor {
         timerTask = Task {
             while isTimerOn {
                 try await clock.sleep(for: .seconds(1))
+//                print("tick")
                 if await shouldFlush() {
                     lastFlushingTime = .now
                     streamContinuation?.yield()
@@ -83,11 +84,9 @@ extension NoraiEventsMonitor: NoraiEventsMonitorProtocol {
         streamContinuation = nil
     }
     
-    nonisolated func listenToMonitorStream() -> AsyncStream<Void> {
+    func listenToMonitorStream() async -> AsyncStream<Void> {
         return AsyncStream<Void> { continuation in
-            Task {
-                await self.setContinution(continuation)
-            }
+            self.setContinution(continuation)
         }
     }
 }

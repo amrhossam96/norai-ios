@@ -221,7 +221,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         context["screen"] = screenName
         context["component"] = componentName
         context["itemId"] = "\(itemId)"
-        context["visibilityRatio"] = "\(Double(ratio))"
         if let duration = viewDuration {
             context["viewDuration"] = "\(duration)"
         }

@@ -47,12 +47,13 @@ final actor NoraiEngine {
     }
     
     private func startListeningToMonitorStream() async throws {
-        let stream: AsyncStream<Void> = eventsMonitor.listenToMonitorStream()
+        let stream: AsyncStream<Void> = await eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
+            print("[Norai] - Started")
             for await _ in stream {
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
                 guard !bufferedEvents.isEmpty else { continue }
-                
+                print("[Norai - INFO] drained \(bufferedEvents.count) events")
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
                 guard !processedEvents.isEmpty else { continue }
                 await self.dispatch(processedEvents)

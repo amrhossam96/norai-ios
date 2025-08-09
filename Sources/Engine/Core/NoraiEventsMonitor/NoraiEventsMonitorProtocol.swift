@@ -11,5 +11,5 @@ protocol NoraiEventsMonitorProtocol: Sendable {
     var buffer: NoraiBufferProtocol { get }
     func startMonitoring() async throws
     func stopMonitoring() async throws
-    func listenToMonitorStream() -> AsyncStream<Void>
+    func listenToMonitorStream() async -> AsyncStream<Void>
 }

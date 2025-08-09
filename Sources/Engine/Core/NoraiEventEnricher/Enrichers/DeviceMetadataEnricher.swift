@@ -30,12 +30,6 @@ public struct DeviceMetadataEnricher: NoraiEventEnricherProtocol {
             let screen = UIScreen.main.bounds
             enrichedEvent.metadata.screenSize = "\(Int(screen.width))x\(Int(screen.height))"
         }
-        #else
-        // macOS fallback
-        let version = ProcessInfo.processInfo.operatingSystemVersion
-        enrichedEvent.metadata.osVersion = "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
-        enrichedEvent.metadata.deviceModel = "Mac"
-        enrichedEvent.metadata.platform = "macOS"
         #endif
         
         // Locale and timezone (safe to access from any thread)
