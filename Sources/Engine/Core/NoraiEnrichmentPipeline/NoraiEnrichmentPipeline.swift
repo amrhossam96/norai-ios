@@ -7,10 +7,11 @@
 
 import Foundation
 
-public final class NoraiEnrichmentPipeline: @unchecked Sendable {
+public final class NoraiEnrichmentPipeline: Sendable {
     private let stateManager: NoraiEngineStateManagerProtocol
     private let enrichers: [any NoraiEventEnricherProtocol]
-    public init(stateManager: NoraiEngineStateManagerProtocol, enrichers: [any NoraiEventEnricherProtocol]) {
+    public init(stateManager: NoraiEngineStateManagerProtocol,
+                enrichers: [any NoraiEventEnricherProtocol]) {
         self.stateManager = stateManager
         self.enrichers = enrichers
     }

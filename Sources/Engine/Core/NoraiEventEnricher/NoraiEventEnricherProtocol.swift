@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol NoraiEventEnricherProtocol {
+public protocol NoraiEventEnricherProtocol: Sendable {
     func enrich(event: NoraiEvent, with state: NoraiEngineState) async -> NoraiEvent
 }

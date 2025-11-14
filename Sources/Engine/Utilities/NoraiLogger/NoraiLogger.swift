@@ -7,26 +7,22 @@
 
 import Foundation
 
-public struct NoraiLogger {
-    private var _currentLevel: LogLevel
+public struct NoraiLogger: Sendable {
+    private let currentLevel: LogLevel
     
     public init(currentLevel: LogLevel) {
-        self._currentLevel = currentLevel
-    }
-    
-    public var currentLevel: LogLevel {
-        return _currentLevel
+        self.currentLevel = currentLevel
     }
 }
 
 extension NoraiLogger: NoraiLoggerProtocol {
     public func log(_ event: NoraiEvent, level: LogLevel) {
-        guard level >= _currentLevel else { return }
+        guard level >= currentLevel else { return }
         print("[Norai - \(level.description)] - Event Type: \(event.event)\n[Norai - \(level.description)] - Timestamp: \(event.timestamp ?? .now)")
     }
     
     public func getCurrentLogLevel() -> LogLevel {
-        return _currentLevel
+        return currentLevel
     }
     
     public func log(_ error: any Error, level: LogLevel) {
@@ -34,6 +30,6 @@ extension NoraiLogger: NoraiLoggerProtocol {
     }
     
     public func log(_ message: String) async {
-        print("[Norai - \(_currentLevel.description)]: \(message)")
+        print("[Norai - \(currentLevel.description)]: \(message)")
     }
 }

@@ -18,8 +18,8 @@ enum NoraiCachingLayerError: Error {
 
 actor NoraiCachingLayer {
     private let fileURL: URL
-    private let maxFileSize: Int = 10 * 1024 * 1024 // 10MB limit
-    private let maxEvents: Int = 1000 // Maximum events to store
+    private let maxFileSize: Int = 10 * 1024 * 1024
+    private let maxEvents: Int = 1000
     
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder

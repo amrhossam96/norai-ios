@@ -8,16 +8,14 @@
 import Foundation
 
 public struct NoraiEvent: Codable, Sendable {
-    public var id: UUID = UUID()
-    public var event: String
+    var id: UUID = UUID()
+    var event: String
     var timestamp: Date?
     var sessionId: UUID?
     var userId: String?
-    
-    // Business properties - what happened
+
     var properties: [String: String] = [:]
     
-    // UI/UX context - how/where it happened  
     var context: [String: String] = [:]
     
     // Device and app metadata (auto-codable)
@@ -59,7 +57,6 @@ public struct EventMetadata: Codable, Sendable {
     var locale: String?
     var networkType: String?
     var timezone: String?
-    var screenSize: String?
     
     public init(
         appVersion: String? = nil,
@@ -69,7 +66,6 @@ public struct EventMetadata: Codable, Sendable {
         locale: String? = nil,
         networkType: String? = nil,
         timezone: String? = nil,
-        screenSize: String? = nil
     ) {
         self.appVersion = appVersion
         self.platform = platform
@@ -78,6 +74,5 @@ public struct EventMetadata: Codable, Sendable {
         self.locale = locale
         self.networkType = networkType
         self.timezone = timezone
-        self.screenSize = screenSize
     }
 }

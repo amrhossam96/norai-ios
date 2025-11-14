@@ -13,8 +13,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
 
     let data: Data
     let content: (Data.Element) -> Content
-    
-    // Configuration for event tracking
+
     private let screenName: String
     private let componentName: String = "NoraiScrollView"
     
@@ -24,7 +23,6 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
     @State private var visibleStartDates: [AnyHashable: Date] = [:]
     @State private var viewProperties: [AnyHashable: [String: String]] = [:]
     
-    // Performance optimization state
     @State private var lastScrollOffset: CGFloat = 0
     @State private var cachedVisibleArea: CGRect = .zero
     @State private var throttleTask: Task<Void, Never>?
@@ -134,8 +132,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         )
         
         var newlyVisible: Set<AnyHashable> = []
-        
-        // Process only potentially visible items
+
         for frameInfo in viewFrames.values {
             let itemFrame = frameInfo.frame
             let id = frameInfo.id
@@ -235,10 +232,7 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
             tags: ["impression", "scroll_view", "visibility"]
         )
         event.properties = viewProperties[itemId] ?? [:]
-
-        Task {
-            await Norai.shared.track(event: event)
-        }
+        Norai.shared.track(event: event)
     }
     
     private func findItemPosition(id: AnyHashable) -> Int? {

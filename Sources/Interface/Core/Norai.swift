@@ -126,12 +126,14 @@ public final class Norai: @unchecked Sendable {
     }
     
     /// Track a custom event
-    public func track(event: NoraiEvent) async {
+    public func track(event: NoraiEvent) {
         guard let engine = engine else {
             print("⚠️ Norai not initialized. Call Norai.shared.initialize(apiKey:) first.")
             return
         }
-        await engine.track(event: event)
+        Task {
+            await engine.track(event: event)
+        }
     }
     
     /// Track an event with properties and context (NEW SIMPLE API)
@@ -139,13 +141,13 @@ public final class Norai: @unchecked Sendable {
         _ eventName: String,
         properties: [String: String] = [:],
         context: [String: String] = [:]
-    ) async {
+    ) {
         let event = NoraiEvent(
             event: eventName,
             properties: properties,
             context: context
         )
-        await track(event: event)
+        track(event: event)
     }
 }
 
