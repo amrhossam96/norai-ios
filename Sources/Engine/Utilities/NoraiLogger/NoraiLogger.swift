@@ -8,28 +8,33 @@
 import Foundation
 
 public struct NoraiLogger: Sendable {
-    private let currentLevel: LogLevel
+    private let minimumLevel: LogLevel
     
-    public init(currentLevel: LogLevel) {
-        self.currentLevel = currentLevel
+    public init(minimumLevel: LogLevel) {
+        self.minimumLevel = minimumLevel
+    }
+    
+    private func shouldLog(level: LogLevel) -> Bool {
+        return level >= minimumLevel
     }
 }
 
 extension NoraiLogger: NoraiLoggerProtocol {
-    public func log(_ event: NoraiEvent, level: LogLevel) {
-        guard level >= currentLevel else { return }
-        print("[Norai - \(level.description)] - Event Type: \(event.event)\n[Norai - \(level.description)] - Timestamp: \(event.timestamp ?? .now)")
-    }
-    
-    public func getCurrentLogLevel() -> LogLevel {
-        return currentLevel
-    }
-    
     public func log(_ error: any Error, level: LogLevel) {
-        print("[Norai - \(level.description)] - Error: \(error.localizedDescription)")
+        guard shouldLog(level: level) else { return }
+        let loggedMessage: String = """
+            [Norai] - \(level.description)]
+            [Norai] - Error: \(error.localizedDescription)
+            """
+        print(loggedMessage)
     }
     
-    public func log(_ message: String) async {
-        print("[Norai - \(currentLevel.description)]: \(message)")
+    public func log(_ message: String, level: LogLevel) {
+        guard shouldLog(level: level) else { return }
+        let loggedMessage: String = """
+            [Norai] - \(level.description)]
+            [Norai] - \(message)
+            """
+        print(loggedMessage)
     }
 }

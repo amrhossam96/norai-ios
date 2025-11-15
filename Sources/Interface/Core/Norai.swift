@@ -44,7 +44,7 @@ public final class Norai: @unchecked Sendable {
     /// Creates a fully configured engine with all components
     private static func createEngine(config: NoraiConfiguration) -> NoraiEngine {
         // Core components
-        let logger = NoraiLogger(currentLevel: config.logLevel)
+        let logger = NoraiLogger(minimumLevel: config.logLevel)
         let stateManager = NoraiEngineStateManager(state: NoraiEngineState())
         let buffer = NoraiBuffer()
         let eventsMonitor = NoraiEventsMonitor(

@@ -19,17 +19,17 @@ actor NoraiBuffer {
 }
 
 extension NoraiBuffer: NoraiBufferProtocol {
-    func add(_ event: NoraiEvent) async {
+    func add(_ event: NoraiEvent) {
         events.append(event)
     }
     
-    func drain() async -> [NoraiEvent] {
-        defer { events = [] }
+    func drain() -> [NoraiEvent] {
+        defer { events.removeAll() }
         let drainedEvents: [NoraiEvent] = events
         return drainedEvents
     }
     
-    func shouldFlush() async -> Bool {
+    func shouldFlush() -> Bool {
         return events.count >= NoraiBufferPolicy.maxEventsCount
     }
 }

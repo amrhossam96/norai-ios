@@ -49,15 +49,14 @@ final actor NoraiEngine {
     private func startListeningToMonitorStream() async throws {
         let stream: AsyncStream<Void> = await eventsMonitor.listenToMonitorStream()
         Task.detached(priority: .background) {
-            print("[Norai] - Started")
             for await _ in stream {
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
                 guard !bufferedEvents.isEmpty else { continue }
-                print("[Norai - INFO] drained \(bufferedEvents.count) events")
+                // TODO: Log drained events
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
                 guard !processedEvents.isEmpty else { continue }
                 await self.dispatch(processedEvents)
-                await self.logger.log("Dispatched \(processedEvents.count) Events")
+                // TODO: Log dispatched events
             }
         }
     }
@@ -72,27 +71,27 @@ final actor NoraiEngine {
                 try await cache.save(events)
                 let cachedCount = await cache.getEventCount()
                 let cacheSize = await cache.getCacheSize()
-                await logger.log("💾 Dispatch failed - cached \(events.count) events. Total: \(cachedCount) events (\(cacheSize) bytes)")
+                // TODO: Log dispatching failed
             } catch {
-                await logger.log("❌ Failed to cache events after dispatch failure: \(error.localizedDescription)")
+                // TODO: Log failed to cache
             }
         }
     }
-    
-    /// Send cached events if any exist
+
     private func sendCachedEventsIfAny() async {
         do {
             let cachedEvents = try await cache.getAll()
             guard !cachedEvents.isEmpty else { return }
             
-            await logger.log("📤 Found \(cachedEvents.count) cached events - attempting to send...")
+            // TODO: Log cached events found. attempting to resend
             
             try await dispatcher.dispatch(events: cachedEvents)
             try await cache.clear()
-            await logger.log("✅ Successfully sent and cleared \(cachedEvents.count) cached events")
+            
+            // TODO: Log send and clear cached events
             
         } catch {
-            await logger.log("⚠️ Failed to send cached events: \(error.localizedDescription)")
+            // TODO: Log failed ot send cached events
         }
     }
 }
@@ -109,7 +108,7 @@ extension NoraiEngine: NoraiEngineProtocol {
     
     func start() async throws {
         guard await stateManager.startEngine() else {
-            await logger.log(NoraiEngineErrors.alreadyStarted, level: .error)
+            // TODO: Log already started
             throw NoraiEngineErrors.alreadyStarted
         }
         try await eventsMonitor.startMonitoring()

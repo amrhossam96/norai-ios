@@ -9,6 +9,5 @@ import Foundation
 
 public enum NoraiEnvironment: Sendable {
     case production
-    case staging
     case sandbox
 }

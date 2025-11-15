@@ -7,12 +7,10 @@
 
 import Foundation
 
-protocol NoraiCachingLayerProtocol: Sendable {
+protocol NoraiCachingLayerProtocol {
     func save(_ events: [NoraiEvent]) async throws
     func getAll() async throws -> [NoraiEvent]
     func clear() async throws
-    
-    // Additional methods for monitoring and management
     func getEventCount() async -> Int
     func getCacheSize() async -> Int
 }
