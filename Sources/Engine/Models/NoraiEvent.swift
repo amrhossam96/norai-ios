@@ -8,21 +8,21 @@
 import Foundation
 
 public struct NoraiEvent: Codable, Sendable, Equatable {
-    var id: UUID = UUID()
-    var event: String
-    var timestamp: Date?
-    var sessionId: UUID?
-    var userId: String?
+    public var id: UUID = UUID()
+    public var event: String
+    public var timestamp: Date?
+    public var sessionId: UUID?
+    public var userId: String?
 
-    var properties: [String: String] = [:]
+    public var properties: [String: String] = [:]
     
-    var context: [String: String] = [:]
+    public var context: [String: String] = [:]
     
     // Device and app metadata (auto-codable)
-    var metadata: EventMetadata = EventMetadata()
+    public var metadata: EventMetadata = EventMetadata()
     
     // Event categorization (auto-codable)
-    var tags: [String] = []
+    public var tags: [String] = []
     
     public init(
         id: UUID = UUID(),
