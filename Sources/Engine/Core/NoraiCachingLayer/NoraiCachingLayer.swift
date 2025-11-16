@@ -81,7 +81,7 @@ actor NoraiCachingLayer {
         let content = try String(contentsOf: url)
         var events: [NoraiEvent] = []
 
-        for (i, line) in content.split(separator: "\n").enumerated() {
+        for (_, line) in content.split(separator: "\n").enumerated() {
             if let data = line.data(using: .utf8) {
                 do {
                     let event = try decoder.decode(NoraiEvent.self, from: data)

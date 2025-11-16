@@ -11,12 +11,34 @@ import Norai
 struct NoraiBufferTests {
 
     @Test
-    func testAddEvent() async {
+    func addEvent() async {
         let sut = makeSUT()
         let testEvent = makeTestEvent()
         await sut.add(testEvent)
         let retrievedEvents = await sut.drain()
         #expect([testEvent] == retrievedEvents)
+    }
+    
+    @Test
+    func shouldFlushBelowMaxCount() async {
+        let sut = makeSUT()
+        for event in Array(repeating: makeTestEvent(),
+                           count: 10) {
+            await sut.add(event)
+        }
+        let shouldFlush = await sut.shouldFlush()
+        #expect(shouldFlush == false)
+    }
+    
+    @Test
+    func shouldFlushAboveMaxCount() async {
+        let sut = makeSUT()
+        for event in Array(repeating: makeTestEvent(),
+                           count: 21) {
+            await sut.add(event)
+        }
+        let shouldFlush = await sut.shouldFlush()
+        #expect(shouldFlush == true)
     }
 }
 
