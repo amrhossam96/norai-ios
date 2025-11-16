@@ -9,8 +9,9 @@ import Foundation
 
 protocol NoraiCachingLayerProtocol {
     func save(_ events: [NoraiEvent]) async throws
-    func getAll() async throws -> [NoraiEvent]
-    func clear() async throws
-    func getEventCount() async -> Int
-    func getCacheSize() async -> Int
+    func loadAll() async throws -> [NoraiEvent]
+    func clearAll() async throws
+    
+    func currentFileEventCount() async -> Int
+    func currentFileSize() async -> Int
 }

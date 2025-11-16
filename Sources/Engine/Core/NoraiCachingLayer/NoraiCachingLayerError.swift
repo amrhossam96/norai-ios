@@ -8,10 +8,7 @@
 import Foundation
 
 enum NoraiCachingLayerError: Error {
-    case filePathDoesntExist
-    case encodingError
-    case decodingError
-    case fileWriteError
-    case fileSizeExceeded
     case directoryCreationFailed
+    case fileWriteError
+    case decodingError
 }

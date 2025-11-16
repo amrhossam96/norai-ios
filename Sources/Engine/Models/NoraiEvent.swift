@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct NoraiEvent: Codable, Sendable {
+public struct NoraiEvent: Codable, Sendable, Equatable {
     var id: UUID = UUID()
     var event: String
     var timestamp: Date?
@@ -49,7 +49,7 @@ public struct NoraiEvent: Codable, Sendable {
 
 // MARK: - Supporting Structures
 
-public struct EventMetadata: Codable, Sendable {
+public struct EventMetadata: Codable, Sendable, Equatable {
     var appVersion: String?
     var platform: String?
     var osVersion: String?
@@ -65,7 +65,7 @@ public struct EventMetadata: Codable, Sendable {
         deviceModel: String? = nil,
         locale: String? = nil,
         networkType: String? = nil,
-        timezone: String? = nil,
+        timezone: String? = nil
     ) {
         self.appVersion = appVersion
         self.platform = platform
@@ -76,3 +76,4 @@ public struct EventMetadata: Codable, Sendable {
         self.timezone = timezone
     }
 }
+

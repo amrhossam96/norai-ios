@@ -13,18 +13,21 @@ public enum NoraiEngineErrors: Error {
 }
 
 final actor NoraiEngine {
+    
+    // MARK: - Dependencies
+    
     private let config: NoraiConfiguration
     private let logger: any NoraiLoggerProtocol
-    
     private let stateManager: any NoraiEngineStateManagerProtocol
     private let enrichmentPipeline: any NoraiEnrichmentPipelineProtocol
     private let processingPipeline: any NoraiProcessingPipelineProtocol
-    
     private let eventsMonitor: any NoraiEventsMonitorProtocol
     private let buffer: any NoraiBufferProtocol
     private let dispatcher: any NoraiEventsDispatcherProtocol
     private let cache: any NoraiCachingLayerProtocol
-
+    
+    // MARK: - Init
+    
     init(
         config: NoraiConfiguration,
         logger: any NoraiLoggerProtocol,
@@ -46,71 +49,85 @@ final actor NoraiEngine {
         self.cache = cache
     }
     
+    // MARK: - Private Helpers
+
     private func startListeningToMonitorStream() async throws {
         let stream: AsyncStream<Void> = await eventsMonitor.listenToMonitorStream()
-        Task.detached(priority: .background) {
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            
             for await _ in stream {
                 let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
                 guard !bufferedEvents.isEmpty else { continue }
-                // TODO: Log drained events
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
                 guard !processedEvents.isEmpty else { continue }
                 await self.dispatch(processedEvents)
-                // TODO: Log dispatched events
             }
         }
     }
     
     private func dispatch(_ events: [NoraiEvent]) async {
         await sendCachedEventsIfAny()
-
+        
         do {
             try await dispatcher.dispatch(events: events)
+            try? await cache.clearAll()
         } catch {
             do {
                 try await cache.save(events)
-                let cachedCount = await cache.getEventCount()
-                let cacheSize = await cache.getCacheSize()
-                // TODO: Log dispatching failed
+                let count = await cache.currentFileEventCount()
+                let size = await cache.currentFileSize()
+                logger.log("Dispatch failed, cached \(count) events (\(size) bytes)", level: config.logLevel)
             } catch {
-                // TODO: Log failed to cache
+                logger.log("Failed to cache events: \(error)", level: config.logLevel)
             }
         }
     }
 
     private func sendCachedEventsIfAny() async {
         do {
-            let cachedEvents = try await cache.getAll()
+            let cachedEvents = try await cache.loadAll()
             guard !cachedEvents.isEmpty else { return }
             
-            // TODO: Log cached events found. attempting to resend
-            
+            logger.log("Sending \(cachedEvents.count) cached events...", level: config.logLevel)
             try await dispatcher.dispatch(events: cachedEvents)
-            try await cache.clear()
             
-            // TODO: Log send and clear cached events
-            
+            try await cache.clearAll()
+            logger.log("Cached events sent and cleared", level: config.logLevel)
         } catch {
-            // TODO: Log failed ot send cached events
+            logger.log("Failed to send cached events: \(error)", level: config.logLevel)
         }
     }
 }
 
+// MARK: - NoraiEngineProtocol
+
 extension NoraiEngine: NoraiEngineProtocol {
+    
+    /// Tracks a new event: enriches, caches, and buffers for dispatch
     func track(event: NoraiEvent) async {
-        let enrichedEvent: NoraiEvent = await enrichmentPipeline.enrich(event: event)
+        let enrichedEvent = await enrichmentPipeline.enrich(event: event)
+        
+        // Immediate caching for crash-resilience
+        do {
+            try await cache.save([enrichedEvent])
+        } catch {
+            logger.log("Failed to cache event immediately: \(error)", level: config.logLevel)
+        }
+
         await buffer.add(enrichedEvent)
     }
     
     func identify(user context: NoraiUserContext) async {
         await stateManager.update(user: context)
     }
-    
+
     func start() async throws {
         guard await stateManager.startEngine() else {
-            // TODO: Log already started
+            logger.log("Engine already started", level: config.logLevel)
             throw NoraiEngineErrors.alreadyStarted
         }
+        
         try await eventsMonitor.startMonitoring()
         try await startListeningToMonitorStream()
     }

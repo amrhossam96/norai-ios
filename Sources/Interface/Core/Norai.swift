@@ -12,11 +12,9 @@ public final class Norai: @unchecked Sendable {
     private var engine: NoraiEngineProtocol?
     
     private init() {
-        // Engine starts as nil - requires initialize() to be called
         self.engine = nil
     }
-    
-    /// Initialize Norai with your API key (required for SDK to work)
+
     public func initialize(
         apiKey: String,
         environment: NoraiEnvironment = .production,
@@ -27,8 +25,7 @@ public final class Norai: @unchecked Sendable {
             environment: environment,
             logLevel: logLevel
         )
-        
-        // Create and start the engine
+
         let newEngine = Self.createEngine(config: config)
         try await newEngine.start()
         self.engine = newEngine
@@ -40,8 +37,6 @@ public final class Norai: @unchecked Sendable {
     }
     
     // MARK: - Private Engine Creation
-    
-    /// Creates a fully configured engine with all components
     private static func createEngine(config: NoraiConfiguration) -> NoraiEngine {
         // Core components
         let logger = NoraiLogger(minimumLevel: config.logLevel)
@@ -49,8 +44,7 @@ public final class Norai: @unchecked Sendable {
         let buffer = NoraiBuffer()
         let eventsMonitor = NoraiEventsMonitor(
             buffer: buffer,
-            clock: ContinuousClock(),
-            logger: logger
+            clock: ContinuousClock()
         )
 
         let networkMonitor = NoraiNetworkMonitor()
@@ -63,7 +57,12 @@ public final class Norai: @unchecked Sendable {
             urlSession: URLSession.shared,
             middlewareExecutor: middlewareExecutor
         )
-        let cache = NoraiCachingLayer()
+        let cache: NoraiCachingLayerProtocol
+        do {
+            cache = try NoraiCachingLayer()
+        } catch {
+            fatalError()
+        }
         let dispatcher = NoraiEventsDispatcher(client: networkClient)
         
         // Create enrichment pipeline with all enrichers

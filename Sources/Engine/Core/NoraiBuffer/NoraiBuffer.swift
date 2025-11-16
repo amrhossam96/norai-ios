@@ -7,29 +7,30 @@
 
 import Foundation
 
-enum NoraiBufferPolicy {
+public enum NoraiBufferPolicy {
     static let maxEventsCount: Int = 20
 }
 
-actor NoraiBuffer {
+public actor NoraiBuffer {
     private var events: [NoraiEvent]
-    init(events: [NoraiEvent] = []) {
+    public init(events: [NoraiEvent] = []) {
         self.events = events
     }
 }
 
 extension NoraiBuffer: NoraiBufferProtocol {
-    func add(_ event: NoraiEvent) {
+    public func add(_ event: NoraiEvent) async {
         events.append(event)
     }
     
-    func drain() -> [NoraiEvent] {
+    public func drain() async -> [NoraiEvent] {
         defer { events.removeAll() }
         let drainedEvents: [NoraiEvent] = events
         return drainedEvents
     }
     
-    func shouldFlush() -> Bool {
+    public func shouldFlush() async -> Bool {
         return events.count >= NoraiBufferPolicy.maxEventsCount
     }
 }
+

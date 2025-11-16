@@ -8,144 +8,137 @@
 import Foundation
 
 actor NoraiCachingLayer {
-    private let fileURL: URL
-    private let maxFileSize: Int = 10 * 1024 * 1024
-    private let maxEvents: Int = 1000
-    
+
+    // MARK: - File Config
+
+    private let directory: URL
+    private let currentFile: URL
+    private let previousFile: URL
+
+    private let maxEvents: Int = 10_000
+    private let maxSize: Int = 5 * 1024 * 1024
+
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
-    
-    public init(filename: String = "norai_cached_events.json") {
-        let directory = FileManager.default
-            .urls(for: .userDirectory, in: .userDomainMask)[0]
-            .appending(path: "Norai", directoryHint: .isDirectory)
-        do {
-            try FileManager.default.createDirectory(at: directory,
-                                                    withIntermediateDirectories: true)
-        } catch {
-            fatalError()
-        }
-        self.fileURL = directory.appendingPathComponent(filename)
+
+    // MARK: - Init
+
+    init(folderName: String = "NoraiCache") throws {
+        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        self.directory = base.appendingPathComponent(folderName, isDirectory: true)
+
+        self.currentFile = directory.appendingPathComponent("events_current.jsonl")
+        self.previousFile = directory.appendingPathComponent("events_previous.jsonl")
+
         self.encoder = JSONEncoder()
         self.encoder.dateEncodingStrategy = .iso8601
-        
+
         self.decoder = JSONDecoder()
         self.decoder.dateDecodingStrategy = .iso8601
-    }
-    
-    private func rotateFile() async throws {
-        let allEvents = try await getAll()
-        let keepCount = Int(Double(maxEvents) * 0.7)
-        let eventsTokeep = Array(allEvents.suffix(keepCount))
-        try await clear()
-        if !eventsTokeep.isEmpty {
-            try await save(eventsTokeep)
-        }
-    }
-    
-    private func shouldRotateFile() async -> Bool {
-        guard FileManager.default.fileExists(atPath: fileURL.path()) else { return false }
-        let attrs: [FileAttributeKey: Any]
-        let content: String
+
         do {
-            attrs = try FileManager.default.attributesOfItem(atPath: fileURL.path())
-            content = try String(contentsOf: fileURL)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         } catch {
-            return false
-        }
-        if let fileSize = attrs[.size] as? Int,
-           fileSize > maxFileSize {
-            return true
-        }
-        let lineCount = content.components(separatedBy: .newlines)
-            .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count
-        return lineCount > maxEvents
-    }
-}
-
-extension NoraiCachingLayer: NoraiCachingLayerProtocol {
-    func save(_ events: [NoraiEvent]) async throws {
-        guard !events.isEmpty else { return }
-        if await shouldRotateFile() {
-            try await rotateFile()
-        }
-        var dataToAppend = Data()
-        for event in events {
-            let jsonData: Data = try encoder.encode(event)
-            dataToAppend.append(jsonData)
-            
-            guard let newlineData = "\n".data(using: .utf8) else {
-                throw NoraiCachingLayerError.encodingError
-            }
-            dataToAppend.append(newlineData)
-        }
-        
-        if FileManager.default.fileExists(atPath: fileURL.path()) {
-            let handle = try FileHandle(forWritingTo: fileURL)
-            try handle.seekToEnd()
-            try handle.write(contentsOf: dataToAppend)
-        } else {
-            try dataToAppend.write(to: fileURL, options: .atomic)
+            throw NoraiCachingLayerError.directoryCreationFailed
         }
     }
-    
-    func getAll() async throws -> [NoraiEvent] {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return []
-        }
-        let fileContent = try String(contentsOf: fileURL, encoding: .utf8)
-        let lines = fileContent.components(separatedBy: .newlines)
 
+    // MARK: - Private Helpers
+
+    private func needsRotation() async -> Bool {
+        guard !FileManager.default.fileExists(atPath: previousFile.path) else { return false }
+        let count = await currentFileEventCount()
+        if count >= maxEvents { return true }
+        let size = await currentFileSize()
+        if size >= maxSize { return true }
+        return false
+    }
+
+    private func rotate() async throws {
+        if FileManager.default.fileExists(atPath: previousFile.path) {
+            try FileManager.default.removeItem(at: previousFile)
+        }
+
+        if FileManager.default.fileExists(atPath: currentFile.path) {
+            try FileManager.default.moveItem(at: currentFile, to: previousFile)
+        }
+
+        FileManager.default.createFile(atPath: currentFile.path, contents: nil)
+    }
+
+    private func getHandleForAppending() throws -> FileHandle {
+        if !FileManager.default.fileExists(atPath: currentFile.path) {
+            FileManager.default.createFile(atPath: currentFile.path, contents: nil)
+        }
+        let handle = try FileHandle(forWritingTo: currentFile)
+        try handle.seekToEnd()
+        return handle
+    }
+
+    private func readFile(_ url: URL) async throws -> [NoraiEvent] {
+        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
+
+        let content = try String(contentsOf: url)
         var events: [NoraiEvent] = []
-        for (index, line) in lines.enumerated() {
-            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmedLine.isEmpty else { continue }
-            
-            if let data = trimmedLine.data(using: .utf8) {
+
+        for (i, line) in content.split(separator: "\n").enumerated() {
+            if let data = line.data(using: .utf8) {
                 do {
                     let event = try decoder.decode(NoraiEvent.self, from: data)
                     events.append(event)
                 } catch {
-                    print("⚠️ Failed to decode event at line \(index): \(error)")
-                    continue
+                    throw NoraiCachingLayerError.decodingError
                 }
             }
         }
-        
         return events
     }
-    
-    func clear() async throws {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
-        try FileManager.default.removeItem(at: fileURL)
-    }
-    
-    func getEventCount() async -> Int {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return 0 }
-        
-        do {
-            let content = try String(contentsOf: fileURL, encoding: .utf8)
-            let count = content
-                .components(separatedBy: .newlines)
-                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                .count
-            return count
-        } catch {
-            print("⚠️ Failed to count cached events: \(error)")
-            return 0
+}
+
+// MARK: - NoraiCachingLayerProtocol
+
+extension NoraiCachingLayer: NoraiCachingLayerProtocol {
+
+    func save(_ events: [NoraiEvent]) async throws {
+        guard !events.isEmpty else { return }
+
+        if await needsRotation() {
+            try await rotate()
+        }
+
+        let handle = try getHandleForAppending()
+        defer { try? handle.close() }
+        for event in events {
+            let data = try encoder.encode(event)
+            guard let newline = "\n".data(using: .utf8) else { continue }
+            try handle.write(contentsOf: data + newline)
         }
     }
 
-    
-    func getCacheSize() async -> Int {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return 0 }
-        
-        do {
-            let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
-            return attributes[.size] as? Int ?? 0
-        } catch {
-            print("⚠️ Failed to get cache file size: \(error)")
-            return 0
+    func loadAll() async throws -> [NoraiEvent] {
+        let files = [previousFile, currentFile]
+        var all: [NoraiEvent] = []
+
+        for file in files {
+            let events = try await readFile(file)
+            all.append(contentsOf: events)
         }
+
+        return all
+    }
+
+    func clearAll() async throws {
+        try? FileManager.default.removeItem(at: currentFile)
+        try? FileManager.default.removeItem(at: previousFile)
+    }
+
+    func currentFileEventCount() async -> Int {
+        guard let content = try? String(contentsOf: currentFile) else { return 0 }
+        return content.split(separator: "\n").count
+    }
+
+    func currentFileSize() async -> Int {
+        guard let attr = try? FileManager.default.attributesOfItem(atPath: currentFile.path) else { return 0 }
+        return (attr[.size] as? Int) ?? 0
     }
 }
