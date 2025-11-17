@@ -10,7 +10,7 @@ import Foundation
 
 enum NoraiDispatchEventEndPoint: NoraiEndpoint {
     
-    case sendEventsInBatch(NoraiBatchEventsRequest)
+    case sendEventsInBatch
     
     var method: HTTPMethod {
         switch self {
@@ -18,18 +18,7 @@ enum NoraiDispatchEventEndPoint: NoraiEndpoint {
         }
     }
     
-    var body: Data? {
-        let encoder = JSONEncoder()
-        do {
-            switch self {
-            case .sendEventsInBatch(let noraiBatchEventsRequest):
-                let data = try encoder.encode(noraiBatchEventsRequest)
-                return data
-            }
-        } catch {
-            return nil
-        }
-    }
+    var body: Data? { nil }
     
     var parameters: [URLQueryItem]? { nil }
     

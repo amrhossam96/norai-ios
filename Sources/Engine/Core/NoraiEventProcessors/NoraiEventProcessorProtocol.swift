@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol NoraiEventProcessorProtocol {
+protocol NoraiEventProcessorProtocol {
     func process(events: [NoraiEvent]) async -> [NoraiEvent]
 }

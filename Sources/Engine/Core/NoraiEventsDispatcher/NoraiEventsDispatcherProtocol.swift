@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol NoraiEventsDispatcherProtocol: Sendable {
+protocol NoraiEventsDispatcherProtocol: Sendable {
     func dispatch(events: [NoraiEvent]) async throws
 }

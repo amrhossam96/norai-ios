@@ -115,7 +115,7 @@ public actor NoraiCachingLayer {
 
 extension NoraiCachingLayer: NoraiCachingLayerProtocol {
     
-    public func save(_ events: [NoraiEvent]) async throws {
+    func save(_ events: [NoraiEvent]) async throws {
         guard !events.isEmpty else { return }
         
         if await needsRotation() {
@@ -131,7 +131,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
         }
     }
     
-    public func loadAll() async throws -> [NoraiEvent] {
+    func loadAll() async throws -> [NoraiEvent] {
         let files = [previousFile, currentFile]
         var all: [NoraiEvent] = []
         

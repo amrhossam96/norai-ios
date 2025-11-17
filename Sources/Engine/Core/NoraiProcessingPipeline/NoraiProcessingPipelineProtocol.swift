@@ -7,6 +7,6 @@
 
 import Foundation
 
-public protocol NoraiProcessingPipelineProtocol: Sendable {
+protocol NoraiProcessingPipelineProtocol: Sendable {
     func process(events: [NoraiEvent]) async -> [NoraiEvent]
 } 

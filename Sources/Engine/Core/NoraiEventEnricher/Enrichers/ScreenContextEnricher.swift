@@ -7,17 +7,11 @@
 
 import Foundation
 
-public struct ScreenContextEnricher: NoraiEventEnricherProtocol {
-    public init() {}
+struct ScreenContextEnricher: NoraiEventEnricherProtocol {
+    init() {}
     
-    public func enrich(event: NoraiEvent, with state: NoraiEngineState) async -> NoraiEvent {
+    func enrich(event: NoraiEvent) async -> NoraiEvent {
         var enrichedEvent = event
-        
-        // Add screen information from engine state
-        enrichedEvent.context["screen"] = state.lastScreen
-        
-        // Add session context
-        enrichedEvent.sessionId = state.sessionId
         
         return enrichedEvent
     }

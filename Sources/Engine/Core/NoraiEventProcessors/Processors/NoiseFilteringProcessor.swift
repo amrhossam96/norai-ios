@@ -9,13 +9,7 @@ import Foundation
 
 struct NoiseFilteringProcessor: NoraiEventProcessorProtocol {
     func process(events: [NoraiEvent]) async -> [NoraiEvent] {
-        return events.filter { event in
-            guard event.event == "item_viewed",
-                  let duration = Double(event.context["viewDuration"] ?? "")
-            else { return true }
-            if duration < 0.7 {
-                return false
-            }
+        return events.filter { event in            
             return true
         }
     }

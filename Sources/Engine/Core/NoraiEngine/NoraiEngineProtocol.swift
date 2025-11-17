@@ -8,7 +8,5 @@
 import Foundation
 
 protocol NoraiEngineProtocol {
-    func track(event: NoraiEvent) async
-    func identify(user: NoraiUserContext) async
     func start() async throws
 }

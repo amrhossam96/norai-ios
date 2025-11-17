@@ -213,26 +213,8 @@ public struct NoraiScrollView<Data: RandomAccessCollection,
         eventName: String,
         viewDuration: TimeInterval? = nil
     ) {
-        // Create rich event context
-        var context: [String: String] = [:]
-        context["screen"] = screenName
-        context["component"] = componentName
-        context["itemId"] = "\(itemId)"
-        if let duration = viewDuration {
-            context["viewDuration"] = "\(duration)"
-        }
-        if let position = findItemPosition(id: itemId) {
-            context["position"] = "\(position)"
-        }
-        context["totalItems"] = "\(data.count)"
 
-        var event = NoraiEvent(
-            event: eventName,
-            context: context,
-            tags: ["impression", "scroll_view", "visibility"]
-        )
-        event.properties = viewProperties[itemId] ?? [:]
-        Norai.shared.track(event: event)
+        
     }
     
     private func findItemPosition(id: AnyHashable) -> Int? {

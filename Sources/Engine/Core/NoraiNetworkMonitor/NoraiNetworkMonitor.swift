@@ -41,8 +41,6 @@ extension NoraiNetworkMonitor: NoraiNetworkMonitorProtocol {
             }
         }
         monitor.start(queue: queue)
-        
-        // Get initial network status
         handlePathUpdate(monitor.currentPath)
         
         print("📶 Network monitor started - Initial status: \(isConnected)")

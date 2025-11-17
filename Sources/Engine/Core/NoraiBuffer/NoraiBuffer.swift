@@ -7,11 +7,11 @@
 
 import Foundation
 
-public enum NoraiBufferPolicy {
+enum NoraiBufferPolicy {
     static let maxEventsCount: Int = 20
 }
 
-public actor NoraiBuffer {
+actor NoraiBuffer {
     private var events: [NoraiEvent]
     public init(events: [NoraiEvent] = []) {
         self.events = events

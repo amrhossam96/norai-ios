@@ -7,7 +7,7 @@
 
 import Foundation
 
-public final class NoraiProcessingPipeline: @unchecked Sendable {
+final class NoraiProcessingPipeline: @unchecked Sendable {
     private let processors: [any NoraiEventProcessorProtocol]
     
     public init(processors: [any NoraiEventProcessorProtocol]) {
@@ -18,8 +18,6 @@ public final class NoraiProcessingPipeline: @unchecked Sendable {
 extension NoraiProcessingPipeline: NoraiProcessingPipelineProtocol {
     public func process(events: [NoraiEvent]) async -> [NoraiEvent] {
         var currentEvents: [NoraiEvent] = events
-        
-        // Run each processor sequentially on the event batch
         for processor in processors {
             currentEvents = await processor.process(events: currentEvents)
         }

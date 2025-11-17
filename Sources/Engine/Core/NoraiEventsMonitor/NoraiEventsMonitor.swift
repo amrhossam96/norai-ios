@@ -67,7 +67,6 @@ actor NoraiEventsMonitor {
         guard let lastFlushingTime = lastFlushingTime else {
             return true
         }
-        
         return Date().timeIntervalSince(lastFlushingTime) >= 30.0
     }
     

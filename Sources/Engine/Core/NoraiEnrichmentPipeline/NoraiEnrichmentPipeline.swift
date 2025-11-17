@@ -7,22 +7,19 @@
 
 import Foundation
 
-public final class NoraiEnrichmentPipeline: Sendable {
-    private let stateManager: NoraiEngineStateManagerProtocol
+final class NoraiEnrichmentPipeline: Sendable {
+    
     private let enrichers: [any NoraiEventEnricherProtocol]
-    public init(stateManager: NoraiEngineStateManagerProtocol,
-                enrichers: [any NoraiEventEnricherProtocol]) {
-        self.stateManager = stateManager
+    init(enrichers: [any NoraiEventEnricherProtocol]) {
         self.enrichers = enrichers
     }
 }
 
 extension NoraiEnrichmentPipeline: NoraiEnrichmentPipelineProtocol {
     public func enrich(event: NoraiEvent) async -> NoraiEvent {
-        let state: NoraiEngineState = await stateManager.getState()
         var currentEvent: NoraiEvent = event
         for enricher: any NoraiEventEnricherProtocol in enrichers {
-            currentEvent = await enricher.enrich(event: currentEvent, with: state)
+            currentEvent = await enricher.enrich(event: currentEvent)
         }
         return currentEvent
     }

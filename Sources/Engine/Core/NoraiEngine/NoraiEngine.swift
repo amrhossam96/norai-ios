@@ -18,7 +18,6 @@ final actor NoraiEngine {
     
     private let config: NoraiConfiguration
     private let logger: any NoraiLoggerProtocol
-    private let stateManager: any NoraiEngineStateManagerProtocol
     private let enrichmentPipeline: any NoraiEnrichmentPipelineProtocol
     private let processingPipeline: any NoraiProcessingPipelineProtocol
     private let eventsMonitor: any NoraiEventsMonitorProtocol
@@ -26,12 +25,15 @@ final actor NoraiEngine {
     private let dispatcher: any NoraiEventsDispatcherProtocol
     private let cache: any NoraiCachingLayerProtocol
     
+    // MARK: - Private Task
+    
+    private var monitorListenerTask: Task<Void, Never>?
+
     // MARK: - Init
     
     init(
         config: NoraiConfiguration,
         logger: any NoraiLoggerProtocol,
-        stateManager: any NoraiEngineStateManagerProtocol,
         enrichmentPipeline: any NoraiEnrichmentPipelineProtocol,
         processingPipeline: any NoraiProcessingPipelineProtocol,
         eventsMonitor: any NoraiEventsMonitorProtocol,
@@ -40,7 +42,6 @@ final actor NoraiEngine {
     ) {
         self.config = config
         self.logger = logger
-        self.stateManager = stateManager
         self.enrichmentPipeline = enrichmentPipeline
         self.processingPipeline = processingPipeline
         self.eventsMonitor = eventsMonitor
@@ -51,16 +52,19 @@ final actor NoraiEngine {
     
     // MARK: - Private Helpers
 
-    private func startListeningToMonitorStream() async throws {
-        let stream: AsyncStream<Void> = await eventsMonitor.listenToMonitorStream()
-        Task.detached(priority: .background) { [weak self] in
+    private func startListeningToMonitorStream() {
+        monitorListenerTask?.cancel()
+        monitorListenerTask = Task { [weak self] in
             guard let self else { return }
+            let stream = await self.eventsMonitor.listenToMonitorStream()
             
             for await _ in stream {
-                let bufferedEvents: [NoraiEvent] = await self.buffer.drain()
+                let bufferedEvents = await self.buffer.drain()
                 guard !bufferedEvents.isEmpty else { continue }
+                
                 let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
                 guard !processedEvents.isEmpty else { continue }
+                
                 await self.dispatch(processedEvents)
             }
         }
@@ -103,32 +107,8 @@ final actor NoraiEngine {
 // MARK: - NoraiEngineProtocol
 
 extension NoraiEngine: NoraiEngineProtocol {
-    
-    /// Tracks a new event: enriches, caches, and buffers for dispatch
-    func track(event: NoraiEvent) async {
-        let enrichedEvent = await enrichmentPipeline.enrich(event: event)
-        
-        // Immediate caching for crash-resilience
-        do {
-            try await cache.save([enrichedEvent])
-        } catch {
-            logger.log("Failed to cache event immediately: \(error)", level: config.logLevel)
-        }
-
-        await buffer.add(enrichedEvent)
-    }
-    
-    func identify(user context: NoraiUserContext) async {
-        await stateManager.update(user: context)
-    }
-
     func start() async throws {
-        guard await stateManager.startEngine() else {
-            logger.log("Engine already started", level: config.logLevel)
-            throw NoraiEngineErrors.alreadyStarted
-        }
-        
         try await eventsMonitor.startMonitoring()
-        try await startListeningToMonitorStream()
+        startListeningToMonitorStream()
     }
 }

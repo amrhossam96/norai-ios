@@ -1,0 +1,48 @@
+//
+//  JSONValue.swift
+//  Norai
+//
+//  Created by Amr Hossam on 18/11/2025.
+//
+
+import Foundation
+
+indirect enum JSONValue: Codable, Equatable {
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case object([String: JSONValue])
+    case array([JSONValue])
+    case null
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let string):
+            try container.encode(string)
+        case .number(let double):
+            try container.encode(double)
+        case .bool(let bool):
+            try container.encode(bool)
+        case .object(let dictionary):
+            try container.encode(dictionary)
+        case .array(let array):
+            try container.encode(array)
+        case .null:
+            try container.encodeNil()
+        }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(String.self) { self = .string(value) }
+        else if let value = try? container.decode(Double.self) { self = .number(value) }
+        else if let value = try? container.decode(Bool.self) { self = .bool(value) }
+        else if let value = try? container.decode([String: JSONValue].self) { self = .object(value) }
+        else if let value = try? container.decode([JSONValue].self) { self = .array(value) }
+        else if container.decodeNil() { self = .null }
+        else { throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown JSON type") }
+    }
+
+}
+

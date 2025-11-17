@@ -23,8 +23,8 @@ actor NoraiEventsDispatcher {
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
     func dispatch(events: [NoraiEvent]) async throws {
         guard !events.isEmpty else { throw NoraiEventsDispatcherError.emptyPayload }
-        let request: NoraiBatchEventsRequest = NoraiBatchEventsRequest(events: events)
-        let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch(request)
+        
+        let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch
         let response: NoraiBatchEventsResponse = try await client.execute(endpoint)
         print("✅ Successfully dispatched \(events.count) events - Server response: \(response.message)")
     }

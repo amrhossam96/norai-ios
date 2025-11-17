@@ -7,13 +7,11 @@
 
 import Foundation
 
-public struct EventFilterProcessor: NoraiEventProcessorProtocol {
-    public init() {}
-    
-    public func process(events: [NoraiEvent]) async -> [NoraiEvent] {
-        // Filter out suppressed events
+struct EventFilterProcessor: NoraiEventProcessorProtocol {
+    func process(events: [NoraiEvent]) async -> [NoraiEvent] {
+        
         return events.filter { event in
-            !event.tags.contains("suppressed")
+            return true
         }
     }
 } 
