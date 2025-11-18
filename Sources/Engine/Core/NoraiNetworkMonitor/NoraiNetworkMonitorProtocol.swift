@@ -10,4 +10,5 @@ import Foundation
 public protocol NoraiNetworkMonitorProtocol: Sendable {
     func startMonitoring() async
     func isNetworkAvailable() async -> Bool
+    func connectionType() async -> String?
 }

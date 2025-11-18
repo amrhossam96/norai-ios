@@ -20,7 +20,9 @@ enum NoraiEngineFactory {
         return NoraiEngine(
             config: configuration,
             logger: logger,
-            enrichmentPipeline: NoraiEnrichmentPipeline(enrichers: []),
+            enrichmentPipeline: NoraiEnrichmentPipeline(enrichers: [
+                DeviceMetadataEnricher(),
+            ]),
             processingPipeline: NoraiProcessingPipeline(processors: []),
             eventsMonitor: NoraiEventsMonitor(buffer: NoraiBuffer(),
                                               clock: ContinuousClock()),

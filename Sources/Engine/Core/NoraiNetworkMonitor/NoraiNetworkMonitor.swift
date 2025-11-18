@@ -42,11 +42,18 @@ extension NoraiNetworkMonitor: NoraiNetworkMonitorProtocol {
         }
         monitor.start(queue: queue)
         handlePathUpdate(monitor.currentPath)
-        
-        print("📶 Network monitor started - Initial status: \(isConnected)")
     }
     
     public func isNetworkAvailable() async -> Bool {
         return isConnected
+    }
+    
+    public func connectionType() async -> String? {
+        switch monitor.currentPath.availableInterfaces.first?.type {
+            case .wifi: return "wifi"
+            case .cellular: return "cellular"
+            case .wiredEthernet: return "ethernet"
+            default: return nil
+            }
     }
 }
