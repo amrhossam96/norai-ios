@@ -10,6 +10,7 @@ import Foundation
 public final class Norai: @unchecked Sendable {
     private var isConfigured: Bool = false
     private var engine: NoraiEngineProtocol?
+
     private init() {}
     public static let shared: Norai = Norai()
     private var engineTask: Task<Void, Never>?
@@ -29,7 +30,10 @@ extension Norai {
             return
         }
         isConfigured = true
-        let engine = NoraiEngineFactory.makeEngine(with: key)
+        let engine = NoraiEngineFactory.makeEngine(
+            with: key,
+            identityManager: NoraiIdentityManager(encryptedRepo: KeychainWrapper())
+        )
         self.engine = engine
         engineTask?.cancel()
         engineTask = Task {
@@ -38,14 +42,29 @@ extension Norai {
     }
     
     func identifyUser(with id: String) {
-        Task {}
+        guard isConfigured else {
+            print("[Norai] - Norai is not configured.")
+            return
+        }
+        Task {
+            await engine?.identify(userID: id)
+        }
     }
     
     func upsertUserInfo() {
-        Task {}
+        guard isConfigured else {
+            print("[Norai] - Norai is not configured.")
+            return
+        }
     }
     
     func trackEvent(name: String, properties: [String: Encodable]) {
-        Task {}
+        guard isConfigured else {
+            print("[Norai] - Norai is not configured.")
+            return
+        }
+        Task {
+            engine?.identify(userID:)
+        }
     }
 }

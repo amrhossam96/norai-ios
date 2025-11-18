@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol KeychainWrapperProtocol: Sendable {
+public protocol EncryptedRepositoryProtocol: Sendable {
     func get(_ key: String) -> Data?
     func set(_ value: Data, for key: String)
     func delete(_ key: String)

@@ -24,6 +24,7 @@ actor NoraiEngine {
     private let buffer: any NoraiBufferProtocol
     private let dispatcher: any NoraiEventsDispatcherProtocol
     private let cache: any NoraiCachingLayerProtocol
+    private let identityManager: any NoraiIdentityManagerProtocol
     
     // MARK: - Private Task
     
@@ -38,7 +39,8 @@ actor NoraiEngine {
         processingPipeline: any NoraiProcessingPipelineProtocol,
         eventsMonitor: any NoraiEventsMonitorProtocol,
         dispatcher: any NoraiEventsDispatcherProtocol,
-        cache: any NoraiCachingLayerProtocol
+        cache: any NoraiCachingLayerProtocol,
+        identityManager: any NoraiIdentityManagerProtocol
     ) {
         self.config = config
         self.logger = logger
@@ -48,6 +50,7 @@ actor NoraiEngine {
         self.buffer = eventsMonitor.buffer
         self.dispatcher = dispatcher
         self.cache = cache
+        self.identityManager = identityManager
     }
     
     // MARK: - Private Helpers
@@ -112,7 +115,33 @@ extension NoraiEngine: NoraiEngineProtocol {
             try await eventsMonitor.startMonitoring()
             startListeningToMonitorStream()
         } catch {
-            print("[Norai] - Couldn't start engine")
+            logger.log("Couldn't start engine", level: config.logLevel)
+        }
+    }
+    
+    func identify(userID: String) async {
+        await identityManager.identify(userID: userID)
+        let identity = await identityManager.currentIdentity()
+        let anonymousID = identity.anonymousID
+        guard let userID = identity.userID else { return }
+        let identityPayload = NoraiUserIdentity(userID: userID, anonymousID: anonymousID)
+        do {
+            let result = try await dispatcher.syncIdentity(payload: identityPayload)
+            if result.success {
+                logger.log("User identity is synced.", level: config.logLevel)
+            }
+        } catch {
+            logger.log("Identification syncing failed.", level: config.logLevel)
+        }
+    }
+    
+    func trackEvent(name: String, properties: [String : JSONValue]) async {
+        Task {
+            let event = NoraiEvent(eventType: name,
+                                   properties: properties,
+                                   context: [:],
+                                   metaData: [:])
+            await buffer.add(event)
         }
     }
 }

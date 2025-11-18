@@ -9,8 +9,9 @@ import Foundation
 
 struct NoraiEvent: Codable {
     public let eventType: String
-    public let sessionID: UUID
-    public let anonymousID: UUID
+    public let sessionID: UUID? = nil
+    public var anonymousID: UUID?
+    public var userID: String?
     public var createdAt: Date = .now
     public var properties: [String: JSONValue]
     public var context: [String: JSONValue]

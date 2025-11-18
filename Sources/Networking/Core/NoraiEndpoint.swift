@@ -10,7 +10,7 @@ import Foundation
 public protocol NoraiEndpoint {
     var method: HTTPMethod { get }
     var baseURL: URL? { get }
-    var body: Data? { get }
+    var body: Encodable? { get }
     var parameters: [URLQueryItem]? { get }
     var headers: [String: String]? { get }
     var path: String { get }
@@ -19,5 +19,13 @@ public protocol NoraiEndpoint {
 public extension NoraiEndpoint {
     var baseURL: URL? {
         return URL(string: "http://localhost:3000")
+    }
+    
+    var parameters: [URLQueryItem]? {
+        return nil
+    }
+    
+    var headers: [String: String]? {
+        return nil
     }
 }

@@ -25,7 +25,6 @@ actor ViewDurationProcessor: NoraiEventProcessorProtocol {
     private func processEvent(_ event: NoraiEvent) async -> NoraiEvent {
         NoraiEvent(
             eventType: "",
-            sessionID: UUID(),
             anonymousID: UUID(),
             properties: [:],
             context: [:],

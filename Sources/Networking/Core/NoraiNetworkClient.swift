@@ -38,7 +38,9 @@ extension NoraiNetworkClient: NoraiNetworkClientProtocol {
 
         var urlRequest: URLRequest = URLRequest(url: fullURL)
         urlRequest.httpMethod = endpoint.method.rawValue
-        urlRequest.httpBody = endpoint.body
+        if let encodable = endpoint.body {
+            urlRequest.httpBody = try? JSONEncoder().encode(encodable)
+        }
         urlRequest.allHTTPHeaderFields = endpoint.headers
 
         var (data, response): (Data, URLResponse)

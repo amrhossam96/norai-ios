@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class KeychainWrapper: KeychainWrapperProtocol {
+final class KeychainWrapper: EncryptedRepositoryProtocol {
     func get(_ key: String) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

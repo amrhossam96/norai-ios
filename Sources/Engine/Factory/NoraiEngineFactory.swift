@@ -8,31 +8,41 @@
 import Foundation
 
 enum NoraiEngineFactory {
-    static func makeEngine(with apiKey: String) -> NoraiEngineProtocol {
+    static func makeEngine(
+        with apiKey: String,
+        identityManager: NoraiIdentityManagerProtocol,
+        environment: NoraiEnvironment = .production
+    ) -> NoraiEngineProtocol {
+
         let configuration = NoraiConfiguration(
             apiKey: apiKey,
-            environment: .production,
+            environment: environment,
             logLevel: .info
         )
-        
+
         let logger = NoraiLogger(minimumLevel: configuration.logLevel)
-        
+
         return NoraiEngine(
             config: configuration,
             logger: logger,
-            enrichmentPipeline: NoraiEnrichmentPipeline(enrichers: [
-                DeviceMetadataEnricher(),
+            enrichmentPipeline: NoraiEnrichmentPipeline(
+                enrichers: [
+                    DeviceMetadataEnricher(),
+                    IdentityContextEnricher(identityManager: identityManager)
             ]),
-            processingPipeline: NoraiProcessingPipeline(processors: []),
+            processingPipeline: NoraiProcessingPipeline(processors: [
+                
+            ]),
             eventsMonitor: NoraiEventsMonitor(buffer: NoraiBuffer(),
                                               clock: ContinuousClock()),
             dispatcher: NoraiEventsDispatcher(
                 client: NoraiNetworkClient(
-                    urlSession: URLSession.shared,
-                    middlewareExecutor: MiddlewareExecutor(middlewares: [])
-                )
-            ),
-            cache: NoraiCachingLayer()
+                urlSession: URLSession.shared,
+                middlewareExecutor: MiddlewareExecutor(middlewares: [])
+            )),
+            cache: NoraiCachingLayer(),
+            identityManager: NoraiIdentityManager(encryptedRepo: KeychainWrapper())
         )
     }
 }
+

@@ -21,6 +21,12 @@ actor NoraiEventsDispatcher {
 }
 
 extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
+    func syncIdentity(payload: NoraiUserIdentity) async throws -> NoraiIdentificationSyncingResponse {
+        let endPoint = NoraiIdentitySyncingEndPoint.identify(payload)
+        let response: NoraiIdentificationSyncingResponse = try await client.execute(endPoint)
+        return response
+    }
+    
     func dispatch(events: [NoraiEvent]) async throws {
         guard !events.isEmpty else { throw NoraiEventsDispatcherError.emptyPayload }
         

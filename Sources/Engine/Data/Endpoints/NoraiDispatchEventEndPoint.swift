@@ -18,7 +18,7 @@ enum NoraiDispatchEventEndPoint: NoraiEndpoint {
         }
     }
     
-    var body: Data? { nil }
+    var body: Encodable? { nil }
     
     var parameters: [URLQueryItem]? { nil }
     
