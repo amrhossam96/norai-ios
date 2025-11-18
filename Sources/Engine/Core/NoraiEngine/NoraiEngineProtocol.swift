@@ -8,5 +8,5 @@
 import Foundation
 
 protocol NoraiEngineProtocol {
-    func start() async throws
+    func start() async
 }

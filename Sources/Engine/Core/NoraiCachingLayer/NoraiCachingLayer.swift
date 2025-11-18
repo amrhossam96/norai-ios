@@ -28,13 +28,7 @@ public actor NoraiCachingLayer {
         baseDirectory: URL? = nil,
         maxEvents: Int = 10_000,
         maxSize: Int = 5 * 1024 * 1024
-    ) throws {
-        // Configure directories
-        let base = baseDirectory ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        self.directory = base.appendingPathComponent(folderName, isDirectory: true)
-        self.currentFile = directory.appendingPathComponent("events_current.jsonl")
-        self.previousFile = directory.appendingPathComponent("events_previous.jsonl")
-        
+    ) {
         // Configure limits
         self.maxEvents = maxEvents
         self.maxSize = maxSize
@@ -43,8 +37,25 @@ public actor NoraiCachingLayer {
         self.encoder = Self.makeEncoder()
         self.decoder = Self.makeDecoder()
         
-        // Create directory
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        // Configure directories safely
+        let base = baseDirectory ?? FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        var tempDirectory = base.appendingPathComponent(folderName, isDirectory: true)
+        var tempCurrent = tempDirectory.appendingPathComponent("events_current.jsonl")
+        var tempPrevious = tempDirectory.appendingPathComponent("events_previous.jsonl")
+        
+        do {
+            try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        } catch {
+            print("[NoraiCachingLayer] Warning: failed to create cache directory. Falling back to temporary directory.")
+            tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("NoraiCache")
+            tempCurrent = tempDirectory.appendingPathComponent("events_current.jsonl")
+            tempPrevious = tempDirectory.appendingPathComponent("events_previous.jsonl")
+            try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        }
+        
+        self.directory = tempDirectory
+        self.currentFile = tempCurrent
+        self.previousFile = tempPrevious
     }
     
     private static func makeEncoder() -> JSONEncoder {
@@ -96,14 +107,13 @@ public actor NoraiCachingLayer {
         let content = try String(contentsOf: url)
         
         var events: [NoraiEvent] = []
-        
         for line in content.split(separator: "\n") {
             if let data = line.data(using: .utf8) {
                 do {
                     let event = try decoder.decode(NoraiEvent.self, from: data)
                     events.append(event)
                 } catch {
-                    throw NoraiCachingLayerError.decodingError
+                    print("[NoraiCachingLayer] Warning: failed to decode event. Skipping line.")
                 }
             }
         }
@@ -124,6 +134,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
         
         let handle = try getHandleForAppending()
         defer { try? handle.close() }
+        
         for event in events {
             let data = try encoder.encode(event)
             guard let newline = "\n".data(using: .utf8) else { continue }

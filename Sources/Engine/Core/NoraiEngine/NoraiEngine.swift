@@ -12,7 +12,7 @@ public enum NoraiEngineErrors: Error {
     case failedToDispatchEvents
 }
 
-final actor NoraiEngine {
+actor NoraiEngine {
     
     // MARK: - Dependencies
     
@@ -107,8 +107,12 @@ final actor NoraiEngine {
 // MARK: - NoraiEngineProtocol
 
 extension NoraiEngine: NoraiEngineProtocol {
-    func start() async throws {
-        try await eventsMonitor.startMonitoring()
-        startListeningToMonitorStream()
+    func start() async {
+        do {
+            try await eventsMonitor.startMonitoring()
+            startListeningToMonitorStream()
+        } catch {
+            print("[Norai] - Couldn't start engine")
+        }
     }
 }
