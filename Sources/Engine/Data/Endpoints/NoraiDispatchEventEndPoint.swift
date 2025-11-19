@@ -11,10 +11,11 @@ import Foundation
 enum NoraiDispatchEventEndPoint: NoraiEndpoint {
     
     case sendEventsInBatch
+    case sendEventIndividually(NoraiEvent)
     
     var method: HTTPMethod {
         switch self {
-        case .sendEventsInBatch: .post
+        case .sendEventsInBatch, .sendEventIndividually: .post
         }
     }
     
@@ -30,6 +31,8 @@ enum NoraiDispatchEventEndPoint: NoraiEndpoint {
         switch self {
         case .sendEventsInBatch:
             return "/"
+        case .sendEventIndividually:
+            return "/events"
         }
     }
 }

@@ -18,7 +18,7 @@ public protocol NoraiEndpoint {
 
 public extension NoraiEndpoint {
     var baseURL: URL? {
-        return URL(string: "http://localhost:3000")
+        return URL(string: "localhost:8080/v1")
     }
     
     var parameters: [URLQueryItem]? {

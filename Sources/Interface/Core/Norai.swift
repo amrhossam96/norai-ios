@@ -22,7 +22,7 @@ public final class Norai: @unchecked Sendable {
     }
 }
 
-extension Norai {
+public extension Norai {
     func configure(with key: String) {
         guard isValidKeyFormat(key) && !isConfigured
         else {

@@ -29,9 +29,20 @@ extension NoraiEventsDispatcher: NoraiEventsDispatcherProtocol {
     
     func dispatch(events: [NoraiEvent]) async throws {
         guard !events.isEmpty else { throw NoraiEventsDispatcherError.emptyPayload }
-        
-        let endpoint = NoraiDispatchEventEndPoint.sendEventsInBatch
-        let response: NoraiBatchEventsResponse = try await client.execute(endpoint)
-        print("✅ Successfully dispatched \(events.count) events - Server response: \(response.message)")
+        _ = try await withThrowingTaskGroup(of: NoraiEventDispatchedResponse.self) { group in
+            for event in events {
+                group.addTask { [client] in
+                    let endpoint = NoraiDispatchEventEndPoint.sendEventIndividually(event)
+                    return try await client.execute(endpoint) as NoraiEventDispatchedResponse
+                }
+            }
+
+            var responses: [NoraiEventDispatchedResponse] = []
+            for try await result in group {
+                responses.append(result)
+            }
+
+            return responses
+        }
     }
 }

@@ -38,7 +38,9 @@ enum NoraiEngineFactory {
             dispatcher: NoraiEventsDispatcher(
                 client: NoraiNetworkClient(
                 urlSession: URLSession.shared,
-                middlewareExecutor: MiddlewareExecutor(middlewares: [])
+                middlewareExecutor: MiddlewareExecutor(middlewares: [
+                    AuthenticationMiddleware(projectAPIKey: configuration.apiKey)
+                ])
             )),
             cache: NoraiCachingLayer(),
             identityManager: NoraiIdentityManager(encryptedRepo: KeychainWrapper())
