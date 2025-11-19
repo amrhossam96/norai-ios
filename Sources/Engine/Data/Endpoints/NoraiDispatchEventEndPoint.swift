@@ -19,7 +19,14 @@ enum NoraiDispatchEventEndPoint: NoraiEndpoint {
         }
     }
     
-    var body: Encodable? { nil }
+    var body: Encodable? {
+        switch self {
+        case .sendEventsInBatch:
+            return nil
+        case .sendEventIndividually(let noraiEvent):
+            return noraiEvent
+        }
+    }
     
     var parameters: [URLQueryItem]? { nil }
     
