@@ -13,7 +13,6 @@ enum NoraiEventsDispatcherError: Error {
 
 actor NoraiEventsDispatcher {
     private let client: any NoraiNetworkClientProtocol
-    private let encoder: JSONEncoder = JSONEncoder()
     
     init(client: any NoraiNetworkClientProtocol) {
         self.client = client
