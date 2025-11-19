@@ -58,13 +58,13 @@ public extension Norai {
         }
     }
     
-    func trackEvent(name: String, properties: [String: Encodable]) {
+    func trackEvent(name: String, properties: [String: JSONValue]) {
         guard isConfigured else {
             print("[Norai] - Norai is not configured.")
             return
         }
         Task {
-            engine?.identify(userID:)
+            await engine?.trackEvent(name: name, properties: properties)
         }
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-indirect enum JSONValue: Codable, Equatable {
+public indirect enum JSONValue: Codable, Equatable {
     case string(String)
     case number(Double)
     case bool(Bool)
@@ -15,7 +15,7 @@ indirect enum JSONValue: Codable, Equatable {
     case array([JSONValue])
     case null
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         switch self {
         case .string(let string):
@@ -33,7 +33,7 @@ indirect enum JSONValue: Codable, Equatable {
         }
     }
     
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(String.self) { self = .string(value) }
         else if let value = try? container.decode(Double.self) { self = .number(value) }
