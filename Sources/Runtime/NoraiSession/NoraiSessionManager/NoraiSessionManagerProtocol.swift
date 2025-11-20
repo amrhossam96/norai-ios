@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol NoraiSessionManagerProtocol {
+protocol NoraiSessionManagerProtocol: Sendable {
     var currentSessionID: UUID { get async }
     func notifyActivity() async
     func appDidBecomeActive() async

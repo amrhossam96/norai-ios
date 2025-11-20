@@ -31,15 +31,17 @@ public extension Norai {
             return
         }
 
-        let engine = NoraiEngineFactory.makeEngine(
-            with: key,
-            identityManager: NoraiIdentityManager(encryptedRepo: KeychainWrapper())
-        )
+        
 
         let sessionManager = NoraiSessionManager(storage: FileSessionStorage())
         self.sessionManager = sessionManager
         self.lifecycleObserver = NoraiLifecycleObserver(sessionManager: sessionManager)
 
+        let engine = NoraiEngineFactory.makeEngine(
+            with: key,
+            identityManager: NoraiIdentityManager(encryptedRepo: KeychainWrapper()),
+            sessionManager: sessionManager
+        )
         self.engine = engine
         engineTask?.cancel()
         engineTask = Task {

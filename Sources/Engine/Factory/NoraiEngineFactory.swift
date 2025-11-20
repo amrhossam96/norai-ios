@@ -11,6 +11,7 @@ enum NoraiEngineFactory {
     static func makeEngine(
         with apiKey: String,
         identityManager: NoraiIdentityManagerProtocol,
+        sessionManager: NoraiSessionManagerProtocol,
         environment: NoraiEnvironment = .production
     ) -> NoraiEngineProtocol {
 
@@ -28,7 +29,9 @@ enum NoraiEngineFactory {
             enrichmentPipeline: NoraiEnrichmentPipeline(
                 enrichers: [
                     DeviceMetadataEnricher(),
-                    IdentityContextEnricher(identityManager: identityManager)
+                    IdentityContextEnricher(identityManager: identityManager),
+                    NetworkContextEnricher(networkMonitor: NoraiNetworkMonitor()),
+                    SessionEnricher(sessionManager: sessionManager)
             ]),
             processingPipeline: NoraiProcessingPipeline(processors: [
                 

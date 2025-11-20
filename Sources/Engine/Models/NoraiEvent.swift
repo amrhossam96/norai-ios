@@ -10,7 +10,7 @@ import Foundation
 public struct NoraiEvent: Codable {
 
     public let eventType: String
-    public let sessionID: UUID? = nil
+    public var sessionID: UUID? = nil
     public var anonymousID: UUID?
     public var userID: String?
     public var createdAt: Date = .now
