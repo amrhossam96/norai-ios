@@ -31,8 +31,6 @@ public extension Norai {
             return
         }
 
-        
-
         let sessionManager = NoraiSessionManager(storage: FileSessionStorage())
         self.sessionManager = sessionManager
         self.lifecycleObserver = NoraiLifecycleObserver(sessionManager: sessionManager)
