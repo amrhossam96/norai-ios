@@ -141,7 +141,8 @@ extension NoraiEngine: NoraiEngineProtocol {
                                    properties: properties,
                                    context: [:],
                                    metaData: [:])
-            await buffer.add(event)
+            let enrichedEvent = await enrichmentPipeline.enrich(event: event)
+            await buffer.add(enrichedEvent)
         }
     }
 }
