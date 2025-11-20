@@ -47,7 +47,7 @@ extension NoraiLifecycleObserver: NoraiLifecycleObserverProtocol {
     
     @objc func onBackground() {
         Task {
-            await sessionManager.appDidBecomeActive()            
+            await sessionManager.appDidEnterBackground()            
         }
     }
 }
