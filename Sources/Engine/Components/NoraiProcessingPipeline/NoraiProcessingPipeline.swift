@@ -16,12 +16,13 @@ final class NoraiProcessingPipeline: @unchecked Sendable {
 }
 
 extension NoraiProcessingPipeline: NoraiProcessingPipelineProtocol {
-    public func process(events: [NoraiEvent]) async -> [NoraiEvent] {
-        var currentEvents: [NoraiEvent] = events
+    public func process(batch: NoraiEventBatch) async -> NoraiEventBatch {
+        var processedBatch: NoraiEventBatch = batch
+        
         for processor in processors {
-            currentEvents = await processor.process(events: currentEvents)
+            processedBatch = await processor.process(batch: processedBatch)
         }
         
-        return currentEvents
+        return processedBatch
     }
 } 

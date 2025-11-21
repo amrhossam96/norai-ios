@@ -64,47 +64,88 @@ actor NoraiEngine {
             for await _ in stream {
                 let bufferedEvents = await self.buffer.drain()
                 guard !bufferedEvents.isEmpty else { continue }
-                
-                let processedEvents = await self.processingPipeline.process(events: bufferedEvents)
-                guard !processedEvents.isEmpty else { continue }
-                
-                await self.dispatch(processedEvents)
+                let batch = NoraiEventBatch(events: bufferedEvents, metaData: [:])
+                let processedBatch = await self.processingPipeline.process(batch: batch)
+                guard !processedBatch.events.isEmpty else { continue }
+                await self.dispatch(processedBatch)
             }
         }
     }
     
-    private func dispatch(_ events: [NoraiEvent]) async {
-        await sendCachedEventsIfAny()
+    private func cache(_ batch: NoraiEventBatch) async {
+        do {
+            try await cache.save(batch)
+            let count = await cache.currentFileBatchCount()
+            let size = await cache.currentFileSize()
+            logger.log("Dispatch failed, cached batch with \(batch.events.count) events (total: \(count) batches, \(size) bytes)", level: config.logLevel)
+        } catch {
+            logger.log("Failed to cache events: \(error)", level: config.logLevel)
+        }
+    }
+    
+    private func dispatch(_ batch: NoraiEventBatch) async {
+        await sendCachedEventsBatchesIfAny()
         
         do {
-            try await dispatcher.dispatch(events: events)
-            try? await cache.clearAll()
-        } catch {
-            do {
-                try await cache.save(events)
-                let count = await cache.currentFileEventCount()
-                let size = await cache.currentFileSize()
-                logger.log("Dispatch failed, cached \(count) events (\(size) bytes)", level: config.logLevel)
-            } catch {
-                logger.log("Failed to cache events: \(error)", level: config.logLevel)
+            let result = try await dispatcher.dispatch(eventsBatch: batch)
+            guard result.sucess else {
+                await cache(batch)
+                return
             }
+        } catch {
+            await cache(batch)
         }
     }
 
-    private func sendCachedEventsIfAny() async {
+    private func sendCachedEventsBatchesIfAny() async {
         do {
-            let cachedEvents = try await cache.loadAll()
-            guard !cachedEvents.isEmpty else { return }
+            let cachedBatches: [NoraiEventBatch] = try await cache.loadAll()
+            guard !cachedBatches.isEmpty else { return }
+
+            logger.log("Sending \(cachedBatches.count) cached events batches...", level: config.logLevel)
+
+            var failedBatches: [NoraiEventBatch] = []
             
-            logger.log("Sending \(cachedEvents.count) cached events...", level: config.logLevel)
-            try await dispatcher.dispatch(events: cachedEvents)
-            
+            await withTaskGroup(of: NoraiEventBatch?.self) { group in
+                for batch in cachedBatches {
+                    group.addTask { [weak self] in
+                        guard let self else { return batch }
+                        do {
+                            let result = try await dispatcher.dispatch(eventsBatch: batch)
+                            return result.sucess ? nil : batch
+                        } catch {
+                            logger.log("Failed to dispatch batch: \(error)", level: config.logLevel)
+                            return batch
+                        }
+                    }
+                }
+                
+                for await failedBatch in group {
+                    if let failedBatch = failedBatch {
+                        failedBatches.append(failedBatch)
+                    }
+                }
+            }
+
             try await cache.clearAll()
-            logger.log("Cached events sent and cleared", level: config.logLevel)
+            for batch in failedBatches {
+                do {
+                    try await cache.save(batch)
+                } catch {
+                    logger.log("Failed to re-cache failed batch: \(error)", level: config.logLevel)
+                }
+            }
+
+            if failedBatches.isEmpty {
+                logger.log("Cached events sent and cleared", level: config.logLevel)
+            } else {
+                logger.log("\(failedBatches.count) batches failed to send and were re-cached", level: config.logLevel)
+            }
         } catch {
             logger.log("Failed to send cached events: \(error)", level: config.logLevel)
         }
     }
+
 }
 
 // MARK: - NoraiEngineProtocol
@@ -114,6 +155,7 @@ extension NoraiEngine: NoraiEngineProtocol {
         do {
             try await eventsMonitor.startMonitoring()
             startListeningToMonitorStream()
+            await sendCachedEventsBatchesIfAny()
         } catch {
             logger.log("Couldn't start engine", level: config.logLevel)
         }
@@ -139,8 +181,7 @@ extension NoraiEngine: NoraiEngineProtocol {
         Task {
             let event = NoraiEvent(eventType: name,
                                    properties: properties,
-                                   context: [:],
-                                   metaData: [:])
+                                   context: [:])
             let enrichedEvent = await enrichmentPipeline.enrich(event: event)
             await buffer.add(enrichedEvent)
         }

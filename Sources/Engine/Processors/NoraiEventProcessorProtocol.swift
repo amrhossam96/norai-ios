@@ -8,6 +8,8 @@
 import Foundation
 
 protocol NoraiEventProcessorProtocol {
-    func process(events: [NoraiEvent]) async -> [NoraiEvent]
+    func process(batch: NoraiEventBatch) async -> NoraiEventBatch
 }
+
+
 

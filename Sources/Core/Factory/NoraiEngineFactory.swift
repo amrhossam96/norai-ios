@@ -28,13 +28,14 @@ enum NoraiEngineFactory {
             logger: logger,
             enrichmentPipeline: NoraiEnrichmentPipeline(
                 enrichers: [
-                    DeviceMetadataEnricher(),
                     IdentityContextEnricher(identityManager: identityManager),
-                    NetworkContextEnricher(networkMonitor: NoraiNetworkMonitor()),
-                    SessionEnricher(sessionManager: sessionManager)
-            ]),
+                ]),
             processingPipeline: NoraiProcessingPipeline(processors: [
-                
+                DeviceMetadataProcessor(),
+                NetworkContextProcessor(networkMonitor: NoraiNetworkMonitor()),
+                SessionProcessor(sessionManager: sessionManager,
+                                 identityManager: identityManager)
+
             ]),
             eventsMonitor: NoraiEventsMonitor(buffer: NoraiBuffer(),
                                               clock: ContinuousClock()),
@@ -50,4 +51,6 @@ enum NoraiEngineFactory {
         )
     }
 }
+
+
 

@@ -1,5 +1,5 @@
 //
-//  NetworkContextEnricher.swift
+//  NetworkContextProcessor.swift
 //  Norai
 //
 //  Created by Amr on 17/07/2025.
@@ -7,22 +7,22 @@
 
 import Foundation
 
-struct NetworkContextEnricher: NoraiEventEnricherProtocol {
+struct NetworkContextProcessor: NoraiEventProcessorProtocol {
     private let networkMonitor: NoraiNetworkMonitorProtocol
 
     init(networkMonitor: NoraiNetworkMonitorProtocol) {
         self.networkMonitor = networkMonitor
     }
-
-    func enrich(event: NoraiEvent) async -> NoraiEvent {
-        var enrichedEvent = event
+    
+    func process(batch: NoraiEventBatch) async -> NoraiEventBatch {
+        var processedBatch = batch
         let isConnected = await networkMonitor.isNetworkAvailable()
-        enrichedEvent.metaData["is_connected"] = .bool(isConnected)
-
+        processedBatch.metaData["is_connected"] = .bool(isConnected)
         if let type = await networkMonitor.connectionType() {
-            enrichedEvent.metaData["connection_type"] = .string(type)
+            processedBatch.metaData["connection_type"] = .string(type)
         }
-        return enrichedEvent
+        return processedBatch
     }
 }
+
 

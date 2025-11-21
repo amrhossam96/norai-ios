@@ -8,6 +8,6 @@
 import Foundation
 
 protocol NoraiEventsDispatcherProtocol: Sendable {
-    func dispatch(events: [NoraiEvent]) async throws
+    func dispatch(eventsBatch: NoraiEventBatch) async throws -> NoraiBatchEventsResponse
     func syncIdentity(payload: NoraiUserIdentity) async throws -> NoraiIdentificationSyncingResponse
 }

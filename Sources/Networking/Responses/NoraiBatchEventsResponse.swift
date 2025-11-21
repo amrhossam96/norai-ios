@@ -8,7 +8,7 @@
 import Foundation
 
 struct NoraiBatchEventsResponse: Decodable {
-    let status: Bool
+    let sucess: Bool
     let message: String
 }
 

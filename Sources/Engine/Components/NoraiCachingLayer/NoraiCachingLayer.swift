@@ -73,11 +73,20 @@ public actor NoraiCachingLayer {
     // MARK: - Private Helpers
     
     private func needsRotation() async -> Bool {
-        let count = await currentFileEventCount()
-        if count >= maxEvents { return true }
+        let eventCount = await currentFileEventCount()
+        if eventCount >= maxEvents { return true }
         let size = await currentFileSize()
         if size >= maxSize { return true }
         return false
+    }
+    
+    private func currentFileEventCount() async -> Int {
+        do {
+            let batches = try await readFile(currentFile)
+            return batches.reduce(0) { $0 + $1.events.count }
+        } catch {
+            return 0
+        }
     }
     
     private func rotate() async throws {
@@ -101,23 +110,23 @@ public actor NoraiCachingLayer {
         return handle
     }
     
-    private func readFile(_ url: URL) async throws -> [NoraiEvent] {
+    private func readFile(_ url: URL) async throws -> [NoraiEventBatch] {
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        
+
         let content = try String(contentsOf: url)
-        
-        var events: [NoraiEvent] = []
+
+        var batches: [NoraiEventBatch] = []
         for line in content.split(separator: "\n") {
             if let data = line.data(using: .utf8) {
                 do {
-                    let event = try decoder.decode(NoraiEvent.self, from: data)
-                    events.append(event)
+                    let batch = try decoder.decode(NoraiEventBatch.self, from: data)
+                    batches.append(batch)
                 } catch {
-                    print("[NoraiCachingLayer] Warning: failed to decode event. Skipping line.")
+                    print("[NoraiCachingLayer] Warning: failed to decode event batch.")
                 }
             }
         }
-        return events
+        return batches
     }
 }
 
@@ -125,32 +134,28 @@ public actor NoraiCachingLayer {
 
 extension NoraiCachingLayer: NoraiCachingLayerProtocol {
     
-    func save(_ events: [NoraiEvent]) async throws {
-        guard !events.isEmpty else { return }
-        
+    func save(_ batch: NoraiEventBatch) async throws {
         if await needsRotation() {
             try await rotate()
         }
-        
+
         let handle = try getHandleForAppending()
         defer { try? handle.close() }
-        
-        for event in events {
-            let data = try encoder.encode(event)
-            guard let newline = "\n".data(using: .utf8) else { continue }
-            try handle.write(contentsOf: data + newline)
-        }
+
+        let data = try encoder.encode(batch)
+        guard let newline = "\n".data(using: .utf8) else { return }
+        try handle.write(contentsOf: data + newline)
     }
-    
-    func loadAll() async throws -> [NoraiEvent] {
+
+    func loadAll() async throws -> [NoraiEventBatch] {
         let files = [previousFile, currentFile]
-        var all: [NoraiEvent] = []
-        
+        var all: [NoraiEventBatch] = []
+
         for file in files {
-            let events = try await readFile(file)
-            all.append(contentsOf: events)
+            let batches = try await readFile(file)
+            all.append(contentsOf: batches)
         }
-        
+
         return all
     }
     
@@ -159,7 +164,7 @@ extension NoraiCachingLayer: NoraiCachingLayerProtocol {
         try? FileManager.default.removeItem(at: previousFile)
     }
     
-    public func currentFileEventCount() async -> Int {
+    public func currentFileBatchCount() async -> Int {
         guard let content = try? String(contentsOf: currentFile) else { return 0 }
         return content.split(separator: "\n").count
     }

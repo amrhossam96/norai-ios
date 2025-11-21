@@ -8,5 +8,5 @@
 import Foundation
 
 protocol NoraiProcessingPipelineProtocol: Sendable {
-    func process(events: [NoraiEvent]) async -> [NoraiEvent]
-} 
+    func process(batch: NoraiEventBatch) async -> NoraiEventBatch
+}
