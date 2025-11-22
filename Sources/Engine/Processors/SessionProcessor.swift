@@ -16,19 +16,34 @@ struct SessionProcessor: NoraiEventProcessorProtocol {
         self.identityManager = identityManager
     }
 
+    private func getLastActivityTime(from events: [NoraiEvent]) -> String {
+        guard let latestEvent = events.max(by: { $0.createdAt < $1.createdAt }) else {
+            return ""
+        }
+        let formatter = ISO8601DateFormatter()
+        return formatter.string(from: latestEvent.createdAt)
+    }
+
     func process(batch: NoraiEventBatch) async -> NoraiEventBatch {
         let sessionID = await sessionManager.currentSessionID
-        var processedBatch: NoraiEventBatch = batch
+        var processedBatch = batch
         let anonymousID = await identityManager.currentIdentity().anonymousID
+
+        // Update metadata
         processedBatch.metaData["session_id"] = .string(sessionID.uuidString)
         processedBatch.metaData["anonymous_id"] = .string(anonymousID.uuidString)
-        processedBatch.events = batch.events.map {
-            var event = $0
-            event.sessionID = sessionID
-            return event
+        processedBatch.metaData["last_activity_at"] = .string(getLastActivityTime(from: batch.events))
+
+        // Assign sessionID to all events
+        processedBatch.events = batch.events.map { event in
+            var e = event
+            e.sessionID = sessionID
+            return e
         }
+
         return processedBatch
     }
+
 }
 
 

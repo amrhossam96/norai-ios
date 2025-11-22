@@ -13,3 +13,4 @@ protocol NoraiIdentityManagerProtocol: Sendable {
     func currentIdentity() async -> (userID: String?, anonymousID: UUID)
 }
 
+

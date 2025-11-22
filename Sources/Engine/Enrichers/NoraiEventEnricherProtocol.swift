@@ -11,3 +11,4 @@ protocol NoraiEventEnricherProtocol: Sendable {
     func enrich(event: NoraiEvent) async -> NoraiEvent
 }
 
+
